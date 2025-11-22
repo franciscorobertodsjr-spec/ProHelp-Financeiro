@@ -6,6 +6,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once 'config.php';
+require_once 'theme.php';
+
+$theme = handleTheme($pdo);
 
 $categoriasLista = $pdo->query('SELECT nome FROM categorias ORDER BY nome')->fetchAll(PDO::FETCH_COLUMN);
 
@@ -72,41 +75,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Nova Despesa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
     <style>
         body {
-            background: #f4f6f9;
+            background: var(--page-bg);
             min-height: 100vh;
             padding: 32px 12px;
             font-family: 'Segoe UI', Arial, sans-serif;
-            color: #1f2937;
+            color: var(--text-color);
         }
         .box {
             max-width: 900px;
             margin: 0 auto;
-            background: #fff;
+            background: var(--surface-color);
             border-radius: 14px;
-            box-shadow: 0 10px 26px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-strong);
             padding: 24px;
         }
-        .btn-primary {
-            background: #10b981;
-            border-color: #0ea271;
+        .form-label { font-weight: 600; color: var(--text-color); }
+        @media (max-width: 576px) {
+            body { padding: 16px 8px; }
+            .box { padding: 18px; }
+            .btn { width: 100%; }
         }
-        .btn-primary:hover {
-            background: #0ea271;
-            border-color: #0d9467;
-        }
-        .form-label { font-weight: 600; color: #111827; }
-        .form-control:focus, .form-select:focus, .btn:focus { box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25); }
-        a { color: #0d9467; }
-        a:hover { color: #0a7a55; }
     </style>
 </head>
-<body>
+<body class="<?php echo themeClass($theme); ?>">
     <div class="box">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h3 class="fw-bold mb-0">Cadastrar Despesa</h3>
-            <a href="principal.php" class="btn btn-link">Voltar</a>
+            <div class="d-flex align-items-center gap-2">
+                <form method="post" class="mb-0">
+                    <input type="hidden" name="toggle_theme" value="1">
+                    <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'despesa_form.php'); ?>">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Tema: <?php echo themeLabel($theme); ?></button>
+                </form>
+                <a href="principal.php" class="btn btn-link">Voltar</a>
+            </div>
         </div>
         <?php if ($success): ?>
             <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>

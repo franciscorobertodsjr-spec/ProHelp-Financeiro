@@ -66,6 +66,11 @@ $pendentes = $pdo->query('SELECT id, username FROM usuarios WHERE ativo = 0 ORDE
         }
         .btn-link { color: #0d9467; }
         .btn-link:hover { color: #0a7a55; }
+        @media (max-width: 576px) {
+            body { padding: 16px 8px; }
+            .box { padding: 18px; }
+            .btn, .btn-success { width: 100%; }
+        }
     </style>
 </head>
 <body>

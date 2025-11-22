@@ -69,6 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-control:focus, .btn:focus { box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25); }
         a { color: #0d9467; }
         a:hover { color: #0a7a55; }
+        @media (max-width: 576px) {
+            body { padding: 16px 8px; }
+            .cadastro-box { padding: 24px; margin: 16px auto; }
+        }
     </style>
 </head>
 <body>

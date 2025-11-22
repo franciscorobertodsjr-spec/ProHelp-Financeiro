@@ -4,28 +4,29 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit;
 }
+require_once 'config.php';
+require_once 'theme.php';
 
 $isAdmin = !empty($_SESSION['is_admin']);
+$theme = handleTheme($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <title>Página Principal</title>
+    <link rel="stylesheet" href="theme.css">
     <style>
         * { box-sizing: border-box; }
         body {
             margin: 0;
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f4f6f9;
+            background: var(--page-bg);
             display: flex;
             min-height: 100vh;
-            color: #1f2937;
+            color: var(--text-color);
         }
-        .layout {
-            display: flex;
-            flex: 1;
-        }
+        .layout { display: flex; flex: 1; }
         .sidebar {
             width: 260px;
             background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
@@ -37,10 +38,11 @@ $isAdmin = !empty($_SESSION['is_admin']);
             box-shadow: 2px 0 14px rgba(0,0,0,0.16);
             transition: width 0.25s ease, padding 0.25s ease;
         }
-        .sidebar.collapsed {
-            width: 74px;
-            padding: 22px 12px;
+        body.theme-dark .sidebar {
+            background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+            color: #e5e7eb;
         }
+        .sidebar.collapsed { width: 74px; padding: 22px 12px; }
         .brand {
             display: flex;
             align-items: center;
@@ -50,13 +52,7 @@ $isAdmin = !empty($_SESSION['is_admin']);
             letter-spacing: 0.3px;
             white-space: nowrap;
         }
-        .brand .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #10b981;
-            opacity: 0.95;
-        }
+        .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: #10b981; opacity: 0.95; }
         .sidebar.collapsed .brand-text { display: none; }
         .user-box {
             background: rgba(255,255,255,0.08);
@@ -66,21 +62,10 @@ $isAdmin = !empty($_SESSION['is_admin']);
             transition: opacity 0.2s ease;
             word-break: break-word;
         }
-        .sidebar.collapsed .user-box {
-            opacity: 0;
-            pointer-events: none;
-            height: 0;
-            padding: 0;
-            margin: 0;
-        }
+        .sidebar.collapsed .user-box { opacity: 0; pointer-events: none; height: 0; padding: 0; margin: 0; }
         .user-box .label { opacity: 0.8; font-size: 13px; }
         .user-box .value { font-weight: 700; }
-        .nav-links {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            flex: 1;
-        }
+        .nav-links { display: flex; flex-direction: column; gap: 10px; flex: 1; }
         .nav-links a, .nav-placeholder {
             color: #f3f4f6;
             text-decoration: none;
@@ -93,17 +78,9 @@ $isAdmin = !empty($_SESSION['is_admin']);
             text-overflow: ellipsis;
             transition: background 0.15s ease, color 0.15s ease;
         }
-        .nav-links a:hover {
-            background: rgba(16,185,129,0.18);
-            color: #ecfdf3;
-        }
-        .sidebar.collapsed .nav-links a, .sidebar.collapsed .nav-placeholder {
-            text-align: center;
-            padding: 10px 0;
-        }
-        .sidebar.collapsed .nav-placeholder {
-            display: none;
-        }
+        .nav-links a:hover { background: rgba(16,185,129,0.18); color: #ecfdf3; }
+        .sidebar.collapsed .nav-links a, .sidebar.collapsed .nav-placeholder { text-align: center; padding: 10px 0; }
+        .sidebar.collapsed .nav-placeholder { display: none; }
         .logout-link {
             color: #f3f4f6;
             text-decoration: none;
@@ -114,23 +91,9 @@ $isAdmin = !empty($_SESSION['is_admin']);
             border: 1px solid rgba(255,255,255,0.25);
             text-align: center;
         }
-        .logout-link:hover {
-            background: rgba(16,185,129,0.18);
-            color: #ecfdf3;
-        }
-        .content {
-            flex: 1;
-            padding: 28px 34px;
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
+        .logout-link:hover { background: rgba(16,185,129,0.18); color: #ecfdf3; }
+        .content { flex: 1; padding: 28px 34px; display: flex; flex-direction: column; gap: 18px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .toggle-btn {
             border: none;
             background: #10b981;
@@ -144,37 +107,50 @@ $isAdmin = !empty($_SESSION['is_admin']);
         }
         .toggle-btn:hover { background: #0ea271; }
         .toggle-btn:active { transform: translateY(1px); }
+        .theme-btn {
+            background: rgba(255,255,255,0.12);
+            color: inherit;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+        }
+        .theme-btn:hover { background: rgba(255,255,255,0.2); }
         .card {
-            background: #fff;
+            background: var(--surface-color);
             border-radius: 12px;
-            box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-strong);
             padding: 22px 24px;
         }
-        .card h1 {
-            margin: 0 0 8px 0;
-            font-size: 24px;
-        }
-        .card p { margin: 0; color: #4b5563; }
+        body.theme-dark .card { box-shadow: var(--shadow-strong); }
+        .card h1 { margin: 0 0 8px 0; font-size: 24px; }
+        .card p { margin: 0; color: var(--muted-color); }
     </style>
 </head>
-<body>
+<body class="<?php echo themeClass($theme); ?>">
     <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div class="brand">
                 <span class="dot"></span>
                 <span class="brand-text">ProHelp</span>
             </div>
-        <div class="user-box">
-            <div class="label">Usuário</div>
-            <div class="value"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
-            <div class="label" style="margin-top:6px;">Perfil</div>
-            <div class="value"><?php echo $isAdmin ? 'Administrador' : 'Padrão'; ?></div>
-        </div>
-        <div class="nav-links">
-            <a href="dashboard.php">Dashboard</a>
-            <a href="despesas.php">Despesas</a>
-            <a href="despesa_form.php">Nova despesa</a>
-            <a href="categoria_form.php">Categorias</a>
+            <div class="user-box">
+                <div class="label">Usuário</div>
+                <div class="value"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
+                <div class="label" style="margin-top:6px;">Perfil</div>
+                <div class="value"><?php echo $isAdmin ? 'Administrador' : 'Padrão'; ?></div>
+            </div>
+            <form method="post" class="d-flex flex-column gap-2">
+                <input type="hidden" name="toggle_theme" value="1">
+                <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'principal.php'); ?>">
+                <button type="submit" class="theme-btn">Tema: <?php echo themeLabel($theme); ?></button>
+            </form>
+            <div class="nav-links">
+                <a href="dashboard.php">Dashboard</a>
+                <a href="dashboard_mensal.php">Dashboard mensal</a>
+                <a href="despesas.php">Despesas</a>
+                <a href="despesa_form.php">Nova despesa</a>
+                <a href="categoria_form.php">Categorias</a>
                 <a href="orcamento_form.php">Novo orçamento</a>
                 <a href="regra_categoria_form.php">Nova regra</a>
                 <?php if ($isAdmin): ?>
