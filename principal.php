@@ -81,6 +81,45 @@ $theme = handleTheme($pdo);
         .nav-links a:hover { background: rgba(16,185,129,0.18); color: #ecfdf3; }
         .sidebar.collapsed .nav-links a, .sidebar.collapsed .nav-placeholder { text-align: center; padding: 10px 0; }
         .sidebar.collapsed .nav-placeholder { display: none; }
+        .nav-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .nav-title {
+            text-transform: uppercase;
+            font-size: 12px;
+            opacity: 0.7;
+            letter-spacing: 0.6px;
+            padding: 0 4px;
+        }
+        .nav-parent {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            color: inherit;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+        }
+        .nav-parent:hover { background: rgba(16,185,129,0.18); color: #ecfdf3; }
+        .nav-parent .chevron { transition: transform 0.2s ease; }
+        .nav-parent.open .chevron { transform: rotate(90deg); }
+        .nav-children {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            padding-left: 10px;
+            margin-top: 6px;
+        }
+        .nav-children.show { display: flex; }
+        .menu-icon {
+            font-size: 14px;
+            margin-right: 8px;
+        }
         .logout-link {
             color: #f3f4f6;
             text-decoration: none;
@@ -146,16 +185,43 @@ $theme = handleTheme($pdo);
                 <button type="submit" class="theme-btn">Tema: <?php echo themeLabel($theme); ?></button>
             </form>
             <div class="nav-links">
-                <a href="dashboard.php">Dashboard</a>
-                <a href="dashboard_mensal.php">Dashboard mensal</a>
-                <a href="despesas.php">Despesas</a>
-                <a href="despesa_form.php">Nova despesa</a>
-                <a href="categoria_form.php">Categorias</a>
-                <a href="orcamento_form.php">Novo orçamento</a>
-                <a href="regra_categoria_form.php">Nova regra</a>
-                <?php if ($isAdmin): ?>
-                    <a href="aprovar_usuarios.php">Aprovar cadastros</a>
-                <?php endif; ?>
+                <div class="nav-section">
+                    <div class="nav-title">Visão</div>
+                    <button type="button" class="nav-parent" data-target="group-dash">
+                        <span><span class="menu-icon">📊</span>Dashboards</span>
+                        <span class="chevron">▶</span>
+                    </button>
+                    <div class="nav-children" id="group-dash">
+                        <a href="dashboard.php"><span class="menu-icon">📈</span>Dashboard anual</a>
+                        <a href="dashboard_mensal.php"><span class="menu-icon">🗓️</span>Dashboard mensal</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-title">Despesas</div>
+                    <button type="button" class="nav-parent" data-target="group-desp">
+                        <span><span class="menu-icon">💸</span>Lançamentos</span>
+                        <span class="chevron">▶</span>
+                    </button>
+                    <div class="nav-children" id="group-desp">
+                        <a href="despesas.php"><span class="menu-icon">📃</span>Lista de despesas</a>
+                        <a href="despesa_form.php"><span class="menu-icon">➕</span>Nova despesa</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-title">Cadastros</div>
+                    <button type="button" class="nav-parent" data-target="group-cad">
+                        <span><span class="menu-icon">⚙️</span>Configurações</span>
+                        <span class="chevron">▶</span>
+                    </button>
+                    <div class="nav-children" id="group-cad">
+                        <a href="categoria_form.php"><span class="menu-icon">🏷️</span>Categorias</a>
+                        <a href="orcamento_form.php"><span class="menu-icon">💰</span>Orçamentos</a>
+                        <a href="regra_categoria_form.php"><span class="menu-icon">🧭</span>Regras de categoria</a>
+                        <?php if ($isAdmin): ?>
+                            <a href="aprovar_usuarios.php"><span class="menu-icon">✅</span>Aprovar cadastros</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
             <a class="logout-link" href="logout.php">Sair</a>
         </aside>
@@ -174,6 +240,16 @@ $theme = handleTheme($pdo);
         const sidebar = document.getElementById('sidebar');
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
+        });
+
+        document.querySelectorAll('.nav-parent').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = document.getElementById(btn.dataset.target);
+                const isOpen = btn.classList.toggle('open');
+                if (target) {
+                    target.classList.toggle('show', isOpen);
+                }
+            });
         });
     </script>
 </body>

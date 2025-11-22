@@ -156,8 +156,8 @@ foreach ($despesas as $d) {
         body.theme-dark .box { box-shadow: var(--shadow-strong); }
         @media print {
             .no-print { display: none !important; }
-            body { background: #fff; }
-            .box { box-shadow: none; padding: 0; }
+            body { background: #fff; color: #000; }
+            .box { box-shadow: none; padding: 0; background: #fff; color: #000; }
             a { text-decoration: none; color: #000; }
         }
         .form-label { font-weight: 600; color: var(--text-color); }
@@ -168,7 +168,7 @@ foreach ($despesas as $d) {
             font-weight: 700;
             font-size: 16px;
             padding: 8px 0;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid var(--border-color);
             page-break-inside: avoid;
         }
         .table { page-break-inside: auto; }
@@ -190,12 +190,7 @@ foreach ($despesas as $d) {
             <div class="d-flex align-items-center gap-2">
                 <a href="despesa_form.php" class="btn btn-primary btn-sm">Nova despesa</a>
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="btnPrint">Imprimir/PDF</button>
-                <form method="post" class="mb-0">
-                    <input type="hidden" name="toggle_theme" value="1">
-                    <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'despesas.php'); ?>">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm">Tema: <?php echo themeLabel($theme); ?></button>
-                </form>
-                <a href="principal.php" class="btn btn-link p-0">Voltar</a>
+                <a href="principal.php" class="btn btn-outline-secondary btn-sm">Voltar</a>
             </div>
         </div>
 

@@ -136,8 +136,8 @@ $parValores = [
                 <h3 class="fw-bold mb-0">Dashboard <?= htmlspecialchars($ano) ?></h3>
                 <div class="text-muted small">Indicadores do ano selecionado</div>
             </div>
-            <div class="d-flex align-items-end gap-2 no-print">
-                <form class="d-flex align-items-end gap-2" method="get">
+            <div class="d-flex align-items-end gap-2 no-print flex-wrap">
+                <form class="d-flex align-items-end gap-2 flex-wrap" method="get">
                     <div>
                         <label class="form-label mb-1" for="ano">Ano</label>
                         <input type="number" class="form-control form-control-sm" id="ano" name="ano" value="<?= htmlspecialchars($ano) ?>" min="2000" max="2100" style="width:110px;">
@@ -145,12 +145,7 @@ $parValores = [
                     <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
                     <a href="dashboard.php" class="btn btn-outline-secondary btn-sm">Limpar</a>
                     <a href="despesas.php" class="btn btn-outline-secondary btn-sm">Ver despesas</a>
-                    <a href="principal.php" class="btn btn-link p-0">Voltar</a>
-                </form>
-                <form method="post" class="mb-0">
-                    <input type="hidden" name="toggle_theme" value="1">
-                    <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'dashboard.php'); ?>">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm">Tema: <?php echo themeLabel($theme); ?></button>
+                    <a href="principal.php" class="btn btn-outline-secondary btn-sm">Voltar</a>
                 </form>
             </div>
         </div>
@@ -240,6 +235,12 @@ $parValores = [
         </div>
     </div>
     <script>
+        const themeStyles = getComputedStyle(document.body);
+        const chartText = themeStyles.getPropertyValue('--text-color').trim() || '#1f2937';
+        const chartBorder = themeStyles.getPropertyValue('--border-color').trim() || '#e5e7eb';
+        Chart.defaults.color = chartText;
+        Chart.defaults.borderColor = chartBorder;
+
         const ctx = document.getElementById('chartMes');
         const labelsMes = <?= json_encode($labelsMes, JSON_UNESCAPED_UNICODE) ?>;
         const valoresMes = <?= json_encode($valoresMes, JSON_UNESCAPED_UNICODE) ?>;

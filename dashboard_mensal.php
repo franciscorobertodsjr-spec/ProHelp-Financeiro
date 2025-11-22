@@ -117,8 +117,8 @@ $parValores = [
                 <h3 class="fw-bold mb-0">Dashboard Mensal</h3>
                 <div class="text-muted small">Selecione mês/ano para analisar</div>
             </div>
-            <div class="d-flex align-items-end gap-2">
-                <form class="d-flex align-items-end gap-2" method="get">
+            <div class="d-flex align-items-end gap-2 flex-wrap">
+                <form class="d-flex align-items-end gap-2 flex-wrap" method="get">
                     <div>
                         <label class="form-label mb-1" for="mes">Mês</label>
                         <select class="form-select form-select-sm" id="mes" name="mes" style="width:120px;">
@@ -133,12 +133,7 @@ $parValores = [
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
                     <a href="dashboard_mensal.php" class="btn btn-outline-secondary btn-sm">Limpar</a>
-                    <a href="principal.php" class="btn btn-link p-0">Voltar</a>
-                </form>
-                <form method="post" class="mb-0">
-                    <input type="hidden" name="toggle_theme" value="1">
-                    <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'dashboard_mensal.php'); ?>">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm">Tema: <?php echo themeLabel($theme); ?></button>
+                    <a href="principal.php" class="btn btn-outline-secondary btn-sm">Voltar</a>
                 </form>
             </div>
         </div>
@@ -218,6 +213,12 @@ $parValores = [
         </div>
     </div>
     <script>
+        const themeStyles = getComputedStyle(document.body);
+        const chartText = themeStyles.getPropertyValue('--text-color').trim() || '#1f2937';
+        const chartBorder = themeStyles.getPropertyValue('--border-color').trim() || '#e5e7eb';
+        Chart.defaults.color = chartText;
+        Chart.defaults.borderColor = chartBorder;
+
         const ctxDia = document.getElementById('chartDia');
         const labelsDia = <?= json_encode($labelsDia, JSON_UNESCAPED_UNICODE) ?>;
         const valoresDia = <?= json_encode($valoresDia, JSON_UNESCAPED_UNICODE) ?>;

@@ -104,14 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="box">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h3 class="fw-bold mb-0">Cadastrar Despesa</h3>
-            <div class="d-flex align-items-center gap-2">
-                <form method="post" class="mb-0">
-                    <input type="hidden" name="toggle_theme" value="1">
-                    <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'despesa_form.php'); ?>">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm">Tema: <?php echo themeLabel($theme); ?></button>
-                </form>
-                <a href="principal.php" class="btn btn-link">Voltar</a>
-            </div>
+            <a href="principal.php" class="btn btn-outline-secondary btn-sm">Voltar</a>
         </div>
         <?php if ($success): ?>
             <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>

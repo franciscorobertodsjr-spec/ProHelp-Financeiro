@@ -6,6 +6,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once 'config.php';
+require_once 'theme.php';
+
+$theme = handleTheme($pdo);
 
 $success = '';
 $error = '';
@@ -33,34 +36,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Nova Regra de Categoria</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
     <style>
         body {
-            background: #f4f6f9;
+            background: var(--page-bg);
             min-height: 100vh;
             padding: 32px 12px;
             font-family: 'Segoe UI', Arial, sans-serif;
-            color: #1f2937;
+            color: var(--text-color);
         }
         .box {
             max-width: 600px;
             margin: 0 auto;
-            background: #fff;
+            background: var(--surface-color);
             border-radius: 14px;
-            box-shadow: 0 10px 26px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-strong);
             padding: 24px;
         }
-        .btn-primary {
-            background: #10b981;
-            border-color: #0ea271;
-        }
-        .btn-primary:hover {
-            background: #0ea271;
-            border-color: #0d9467;
-        }
-        .form-label { font-weight: 600; color: #111827; }
-        .form-control:focus, .btn:focus { box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25); }
-        a { color: #0d9467; }
-        a:hover { color: #0a7a55; }
+        .form-label { font-weight: 600; color: var(--text-color); }
         @media (max-width: 576px) {
             body { padding: 16px 8px; }
             .box { padding: 18px; }
@@ -68,11 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
-<body>
+<body class="<?php echo themeClass($theme); ?>">
     <div class="box">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h3 class="fw-bold mb-0">Cadastrar Regra de Categoria</h3>
-            <a href="principal.php" class="btn btn-link">Voltar</a>
+            <a href="principal.php" class="btn btn-outline-secondary btn-sm">Voltar</a>
         </div>
         <?php if ($success): ?>
             <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>

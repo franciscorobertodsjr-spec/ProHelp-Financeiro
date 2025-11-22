@@ -81,15 +81,11 @@ if ($id <= 0) {
     <meta charset="UTF-8">
     <title>Editar Despesa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
     <style>
-        body { background: #f4f6f9; min-height: 100vh; padding: 24px 12px; font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; }
-        .box { max-width: 900px; margin: 0 auto; background: #fff; border-radius: 14px; box-shadow: 0 10px 26px rgba(0,0,0,0.08); padding: 24px; }
-        .btn-primary { background: #10b981; border-color: #0ea271; }
-        .btn-primary:hover { background: #0ea271; border-color: #0d9467; }
-        .form-label { font-weight: 600; color: #111827; }
-        .form-control:focus, .form-select:focus, .btn:focus { box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25); }
-        a { color: #0d9467; }
-        a:hover { color: #0a7a55; }
+        body { background: var(--page-bg); min-height: 100vh; padding: 24px 12px; font-family: 'Segoe UI', Arial, sans-serif; color: var(--text-color); }
+        .box { max-width: 900px; margin: 0 auto; background: var(--surface-color); border-radius: 14px; box-shadow: var(--shadow-strong); padding: 24px; }
+        .form-label { font-weight: 600; color: var(--text-color); }
         @media (max-width: 576px) {
             body { padding: 16px 8px; }
             .box { padding: 18px; }
@@ -97,11 +93,11 @@ if ($id <= 0) {
         }
     </style>
 </head>
-<body>
+<body class="<?php echo themeClass($theme); ?>">
     <div class="box">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h3 class="fw-bold mb-0">Editar Despesa #<?= (int)$id ?></h3>
-            <a href="despesas.php" class="btn btn-link">Voltar</a>
+            <a href="despesas.php" class="btn btn-outline-secondary btn-sm">Voltar</a>
         </div>
         <?php if ($success): ?><div class="alert alert-success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
         <?php if ($error): ?><div class="alert alert-danger"><?= htmlspecialchars($error) ?></div><?php endif; ?>
