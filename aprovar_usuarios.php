@@ -23,6 +23,7 @@ $theme = handleTheme($pdo);
 
 $message = '';
 $error = '';
+$popupType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userId = (int)($_POST['user_id'] ?? 0);
@@ -30,8 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update = $pdo->prepare('UPDATE usuarios SET ativo = 1 WHERE id = ?');
         if ($update->execute([$userId])) {
             $message = 'Usuário aprovado com sucesso.';
+            $popupType = 'success';
         } else {
             $error = 'Não foi possível aprovar o usuário.';
+            $popupType = 'error';
         }
     }
 }
@@ -99,46 +102,46 @@ $pendentes = $pdo->query('SELECT id, username FROM usuarios WHERE ativo = 0 ORDE
             </div>
         <?php endif; ?>
     </div>
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="popup-container" id="popupContainer"></div>
     <script>
-        function getToastContainer() {
-            let c = document.getElementById('toastContainer');
+        function getPopupContainer() {
+            let c = document.getElementById('popupContainer');
             if (!c) {
                 c = document.createElement('div');
-                c.id = 'toastContainer';
-                c.className = 'toast-container';
+                c.id = 'popupContainer';
+                c.className = 'popup-container';
                 document.body.appendChild(c);
             }
             return c;
         }
-        function showToast(message, type = 'success') {
-            const toastContainer = getToastContainer();
-            if (!toastContainer) return;
+        function showPopup(message, type = 'success') {
+            const popupContainer = getPopupContainer();
+            if (!popupContainer) return;
             const config = {
-                success: { cls: 'toast-success', icon: '✓', title: 'Sucesso' },
-                error: { cls: 'toast-error', icon: '×', title: 'Erro' },
-                warning: { cls: 'toast-warning', icon: '!', title: 'Alerta' }
+                success: { cls: 'popup-success', icon: '✓', title: 'Sucesso' },
+                error: { cls: 'popup-error', icon: '×', title: 'Erro' },
+                warning: { cls: 'popup-warning', icon: '!', title: 'Alerta' }
             };
             const conf = config[type] || config.success;
             const el = document.createElement('div');
-            el.className = `toast show ${conf.cls}`;
+            el.className = `popup show ${conf.cls}`;
             el.innerHTML = `
-                <div class="toast-icon">${conf.icon}</div>
-                <div class="toast-body">
-                    <div class="toast-title">${conf.title}</div>
-                    <div class="toast-message">${message}</div>
+                <div class="popup-icon">${conf.icon}</div>
+                <div class="popup-body">
+                    <div class="popup-title">${conf.title}</div>
+                    <div class="popup-message">${message}</div>
                 </div>
-                <button class="toast-close" aria-label="Fechar">&times;</button>
+                <button class="popup-close" aria-label="Fechar">&times;</button>
             `;
-            el.querySelector('.toast-close').addEventListener('click', () => el.remove());
-            toastContainer.appendChild(el);
+            el.querySelector('.popup-close').addEventListener('click', () => el.remove());
+            popupContainer.appendChild(el);
             setTimeout(() => {
                 el.classList.add('hide');
                 setTimeout(() => el.remove(), 300);
             }, 3200);
         }
-        function triggerToast(message, type) {
-            const run = () => showToast(message, type);
+        function triggerPopup(message, type) {
+            const run = () => showPopup(message, type);
             if (document.readyState === 'complete') {
                 run();
             } else {
@@ -146,10 +149,10 @@ $pendentes = $pdo->query('SELECT id, username FROM usuarios WHERE ativo = 0 ORDE
             }
         }
         <?php if ($message): ?>
-        triggerToast(<?= json_encode($message) ?>, 'success');
+        triggerPopup(<?= json_encode($message) ?>, 'success');
         <?php endif; ?>
         <?php if ($error): ?>
-        triggerToast(<?= json_encode($error) ?>, 'error');
+        triggerPopup(<?= json_encode($error) ?>, <?= json_encode($popupType ?: 'error') ?>);
         <?php endif; ?>
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

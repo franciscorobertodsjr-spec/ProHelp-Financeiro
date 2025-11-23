@@ -79,6 +79,64 @@ $parValores = [
     isset($parData[1]) ? (float)$parData[1] : 0,
     isset($parData[0]) ? (float)$parData[0] : 0
 ];
+
+$anoAnterior = (string)((int)$ano - 1);
+$variacaoStmt = $pdo->prepare("
+    SELECT
+        COALESCE(categoria, 'Sem categoria') AS categoria,
+        SUM(CASE WHEN YEAR(data_vencimento) = ? THEN valor ELSE 0 END) AS total_atual,
+        SUM(CASE WHEN YEAR(data_vencimento) = ? THEN valor ELSE 0 END) AS total_anterior
+    FROM despesas
+    WHERE YEAR(data_vencimento) IN (?, ?)
+    GROUP BY categoria
+");
+$variacaoStmt->execute([$ano, $anoAnterior, $ano, $anoAnterior]);
+$variacoes = [];
+foreach ($variacaoStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $totalAtual = (float)$row['total_atual'];
+    $totalAnterior = (float)$row['total_anterior'];
+    $delta = $totalAtual - $totalAnterior;
+    $variacoes[] = [
+        'categoria' => $row['categoria'],
+        'atual' => $totalAtual,
+        'anterior' => $totalAnterior,
+        'delta' => $delta
+    ];
+}
+$crescentes = array_values(array_filter($variacoes, static fn($v) => $v['delta'] > 0));
+usort($crescentes, static fn($a, $b) => $b['delta'] <=> $a['delta']);
+$crescentes = array_slice($crescentes, 0, 10);
+
+$decrescentes = array_values(array_filter($variacoes, static fn($v) => $v['delta'] < 0));
+usort($decrescentes, static fn($a, $b) => $a['delta'] <=> $b['delta']);
+$decrescentes = array_slice($decrescentes, 0, 10);
+
+$cresLabels = array_column($crescentes, 'categoria');
+$cresValores = array_map(static fn($v) => round($v['delta'], 2), $crescentes);
+$quedaLabels = array_column($decrescentes, 'categoria');
+$quedaValores = array_map(static fn($v) => round($v['delta'], 2), $decrescentes);
+
+$catMesStmt = $pdo->prepare("
+    SELECT COALESCE(categoria, 'Sem categoria') AS categoria,
+           DATE_FORMAT(data_vencimento, '%Y-%m') AS mes,
+           SUM(valor) AS total
+    FROM despesas
+    WHERE YEAR(data_vencimento) = ?
+    GROUP BY categoria, mes
+    ORDER BY categoria, mes
+");
+$catMesStmt->execute([$ano]);
+$catMesRows = $catMesStmt->fetchAll(PDO::FETCH_ASSOC);
+$catMesData = [];
+$mesLabelsCat = [];
+foreach ($catMesRows as $row) {
+    $cat = $row['categoria'];
+    $mes = $row['mes'];
+    $mesLabelsCat[$mes] = true;
+    $catMesData[$cat][$mes] = (float)$row['total'];
+}
+$mesLabelsCat = array_keys($mesLabelsCat);
+sort($mesLabelsCat);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -131,17 +189,6 @@ $parValores = [
     </style>
 </head>
 <body class="<?php echo themeClass($theme); ?>">
-    <header class="topbar-global">
-        <div class="brand">
-            <span class="brand-dot"></span>
-            <span>ProHelp Financeiro</span>
-        </div>
-        <div class="actions">
-            <span class="small">Data/Hora: <?php echo htmlspecialchars($dataHora); ?></span>
-            <a href="#" class="topbar-btn" onclick="return false;">Ajuda</a>
-            <a href="principal.php" class="topbar-btn">Menu</a>
-        </div>
-    </header>
     <div class="page-container">
     <div class="box">
         <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-3">
@@ -221,12 +268,56 @@ $parValores = [
                     <canvas id="chartMes"></canvas>
                 </div>
             </div>
+        </div>
+        <div class="row g-4 chart-row">
             <div class="col-md-6">
-                <h5 class="fw-bold">Distribuição por status</h5>
+                <h5 class="fw-bold">Top 10 categorias que cresceram (<?php echo htmlspecialchars($anoAnterior); ?> → <?php echo htmlspecialchars($ano); ?>)</h5>
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Categoria</th><th>Atual (<?php echo htmlspecialchars($ano); ?>)</th><th>Anterior (<?php echo htmlspecialchars($anoAnterior); ?>)</th><th>Variação</th></tr></thead>
+                    <tbody>
+                        <?php if (!$crescentes): ?>
+                            <tr><td colspan="4" class="text-muted text-center">Sem dados</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($crescentes as $c): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($c['categoria']) ?></td>
+                                    <td>R$ <?= number_format((float)$c['atual'], 2, ',', '.') ?></td>
+                                    <td>R$ <?= number_format((float)$c['anterior'], 2, ',', '.') ?></td>
+                                    <td class="text-success fw-semibold">+R$ <?= number_format((float)$c['delta'], 2, ',', '.') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
                 <div class="chart-box">
-                    <canvas id="chartStatus"></canvas>
+                    <canvas id="chartCres"></canvas>
                 </div>
             </div>
+            <div class="col-md-6">
+                <h5 class="fw-bold">Top 10 categorias que caíram (<?php echo htmlspecialchars($anoAnterior); ?> → <?php echo htmlspecialchars($ano); ?>)</h5>
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Categoria</th><th>Atual (<?php echo htmlspecialchars($ano); ?>)</th><th>Anterior (<?php echo htmlspecialchars($anoAnterior); ?>)</th><th>Variação</th></tr></thead>
+                    <tbody>
+                        <?php if (!$decrescentes): ?>
+                            <tr><td colspan="4" class="text-muted text-center">Sem dados</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($decrescentes as $c): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($c['categoria']) ?></td>
+                                    <td>R$ <?= number_format((float)$c['atual'], 2, ',', '.') ?></td>
+                                    <td>R$ <?= number_format((float)$c['anterior'], 2, ',', '.') ?></td>
+                                    <td class="text-danger fw-semibold">-R$ <?= number_format(abs((float)$c['delta']), 2, ',', '.') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+                <div class="chart-box">
+                    <canvas id="chartQueda"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4 chart-row">
             <div class="col-md-6">
                 <h5 class="fw-bold">Top categorias (gráfico)</h5>
                 <div class="chart-box">
@@ -234,15 +325,24 @@ $parValores = [
                 </div>
             </div>
             <div class="col-md-6">
-                <h5 class="fw-bold">Recorrente x Não recorrente</h5>
+                <h5 class="fw-bold">Distribuição por status</h5>
                 <div class="chart-box">
-                    <canvas id="chartRec"></canvas>
+                    <canvas id="chartStatus"></canvas>
                 </div>
             </div>
-            <div class="col-md-6">
-                <h5 class="fw-bold">Parcelado x Não parcelado</h5>
+        </div>
+        <div class="row g-4 chart-row">
+            <div class="col-12">
+                <h5 class="fw-bold d-flex align-items-center gap-2 flex-wrap">
+                    Despesas por mês e categoria (<?php echo htmlspecialchars($ano); ?>)
+                    <select id="catMesSelect" class="form-select form-select-sm" style="width:auto; min-width:180px;">
+                        <?php foreach (array_keys($catMesData) as $catNome): ?>
+                            <option value="<?= htmlspecialchars($catNome) ?>"><?= htmlspecialchars($catNome) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </h5>
                 <div class="chart-box">
-                    <canvas id="chartPar"></canvas>
+                    <canvas id="chartCatMes"></canvas>
                 </div>
             </div>
         </div>
@@ -253,6 +353,30 @@ $parValores = [
         const chartBorder = themeStyles.getPropertyValue('--border-color').trim() || '#e5e7eb';
         Chart.defaults.color = chartText;
         Chart.defaults.borderColor = chartBorder;
+        const valuePlugin = {
+            id: 'valuePlugin',
+            afterDatasetsDraw(chart) {
+                const {ctx} = chart;
+                ctx.save();
+                ctx.fillStyle = chartText;
+                ctx.font = '12px sans-serif';
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    if (!chart.isDatasetVisible(i)) return;
+                    meta.data.forEach((element, index) => {
+                        const raw = dataset.data[index];
+                        if (raw === null || raw === undefined) return;
+                        const value = typeof raw === 'number' ? raw : Number(raw) || 0;
+                        const label = 'R$ ' + value.toLocaleString('pt-BR');
+                        const pos = element.tooltipPosition();
+                        const y = pos.y - 6;
+                        ctx.fillText(label, pos.x, y);
+                    });
+                });
+                ctx.restore();
+            }
+        };
+        Chart.register(valuePlugin);
 
         const ctx = document.getElementById('chartMes');
         const labelsMes = <?= json_encode($labelsMes, JSON_UNESCAPED_UNICODE) ?>;
@@ -308,7 +432,7 @@ $parValores = [
         const valoresCat = <?= json_encode($valoresCat, JSON_UNESCAPED_UNICODE) ?>;
         if (ctxCat && labelsCat.length > 0) {
             new Chart(ctxCat, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
                     labels: labelsCat,
                     datasets: [{
@@ -317,43 +441,96 @@ $parValores = [
                     }]
                 },
                 options: {
-                    plugins: { legend: { position: 'bottom' } }
+                    plugins: { legend: { display: false } },
+                    indexAxis: 'y',
+                    scales: {
+                        x: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') }, beginAtZero: true }
+                    }
                 }
             });
         }
 
-        const ctxRec = document.getElementById('chartRec');
-        const recLabels = <?= json_encode($recLabels, JSON_UNESCAPED_UNICODE) ?>;
-        const recValores = <?= json_encode($recValores, JSON_UNESCAPED_UNICODE) ?>;
-        if (ctxRec) {
-            new Chart(ctxRec, {
-                type: 'doughnut',
+
+        const ctxCres = document.getElementById('chartCres');
+        const cresLabels = <?= json_encode($cresLabels, JSON_UNESCAPED_UNICODE) ?>;
+        const cresValores = <?= json_encode($cresValores, JSON_UNESCAPED_UNICODE) ?>;
+        if (ctxCres && cresLabels.length > 0) {
+            new Chart(ctxCres, {
+                type: 'bar',
                 data: {
-                    labels: recLabels,
+                    labels: cresLabels,
                     datasets: [{
-                        data: recValores,
-                        backgroundColor: ['#10b981','#e5e7eb']
+                        label: 'Variação (R$)',
+                        data: cresValores,
+                        backgroundColor: '#10b981'
                     }]
                 },
-                options: { plugins: { legend: { position: 'bottom' } } }
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+                }
             });
         }
 
-        const ctxPar = document.getElementById('chartPar');
-        const parLabels = <?= json_encode($parLabels, JSON_UNESCAPED_UNICODE) ?>;
-        const parValores = <?= json_encode($parValores, JSON_UNESCAPED_UNICODE) ?>;
-        if (ctxPar) {
-            new Chart(ctxPar, {
-                type: 'doughnut',
+        const ctxQueda = document.getElementById('chartQueda');
+        const quedaLabels = <?= json_encode($quedaLabels, JSON_UNESCAPED_UNICODE) ?>;
+        const quedaValores = <?= json_encode($quedaValores, JSON_UNESCAPED_UNICODE) ?>;
+        if (ctxQueda && quedaLabels.length > 0) {
+            new Chart(ctxQueda, {
+                type: 'bar',
                 data: {
-                    labels: parLabels,
+                    labels: quedaLabels,
                     datasets: [{
-                        data: parValores,
-                        backgroundColor: ['#6366f1','#e5e7eb']
+                        label: 'Variação (R$)',
+                        data: quedaValores,
+                        backgroundColor: '#ef4444'
                     }]
                 },
-                options: { plugins: { legend: { position: 'bottom' } } }
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+                }
             });
+        }
+
+        const catMesData = <?= json_encode($catMesData, JSON_UNESCAPED_UNICODE) ?>;
+        const mesLabelsCat = <?= json_encode($mesLabelsCat, JSON_UNESCAPED_UNICODE) ?>;
+        const catMesSelect = document.getElementById('catMesSelect');
+        const ctxCatMes = document.getElementById('chartCatMes');
+        let catMesChart = null;
+
+        function renderCatMesChart(cat) {
+            if (!ctxCatMes) return;
+            const dataCat = mesLabelsCat.map(m => (catMesData[cat] && catMesData[cat][m]) ? catMesData[cat][m] : 0);
+            if (catMesChart) catMesChart.destroy();
+            catMesChart = new Chart(ctxCatMes, {
+                type: 'line',
+                data: {
+                    labels: mesLabelsCat,
+                    datasets: [{
+                        label: `Despesas de ${cat} (R$)`,
+                        data: dataCat,
+                        borderColor: '#0ea5e9',
+                        backgroundColor: 'rgba(14,165,233,0.18)',
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } }
+                    }
+                }
+            });
+        }
+
+        if (catMesSelect && ctxCatMes && Object.keys(catMesData).length > 0) {
+            renderCatMesChart(catMesSelect.value);
+            catMesSelect.addEventListener('change', () => renderCatMesChart(catMesSelect.value));
         }
     </script>
     </div>

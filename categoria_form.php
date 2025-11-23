@@ -12,21 +12,26 @@ $theme = handleTheme($pdo);
 
 $success = '';
 $error = '';
+$popupType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome'] ?? '');
     if (!$nome) {
         $error = 'Informe o nome da categoria.';
+        $popupType = 'warning';
     } else {
         try {
             $stmt = $pdo->prepare('INSERT INTO categorias (nome) VALUES (?)');
             $stmt->execute([$nome]);
             $success = 'Categoria cadastrada com sucesso.';
+            $popupType = 'success';
         } catch (PDOException $e) {
             if ((int)$e->errorInfo[1] === 1062) {
                 $error = 'Categoria já existe.';
+                $popupType = 'error';
             } else {
                 $error = 'Erro ao salvar: ' . $e->getMessage();
+                $popupType = 'error';
             }
         }
     }
@@ -106,46 +111,46 @@ $categorias = $pdo->query('SELECT id, nome FROM categorias ORDER BY nome')->fetc
             </table>
         </div>
     </div>
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="popup-container" id="popupContainer"></div>
     <script>
-        function getToastContainer() {
-            let c = document.getElementById('toastContainer');
+        function getPopupContainer() {
+            let c = document.getElementById('popupContainer');
             if (!c) {
                 c = document.createElement('div');
-                c.id = 'toastContainer';
-                c.className = 'toast-container';
+                c.id = 'popupContainer';
+                c.className = 'popup-container';
                 document.body.appendChild(c);
             }
             return c;
         }
-        function showToast(message, type = 'success') {
-            const toastContainer = getToastContainer();
-            if (!toastContainer) return;
+        function showPopup(message, type = 'success') {
+            const popupContainer = getPopupContainer();
+            if (!popupContainer) return;
             const config = {
-                success: { cls: 'toast-success', icon: '✓', title: 'Sucesso' },
-                error: { cls: 'toast-error', icon: '×', title: 'Erro' },
-                warning: { cls: 'toast-warning', icon: '!', title: 'Alerta' }
+                success: { cls: 'popup-success', icon: '✓', title: 'Sucesso' },
+                error: { cls: 'popup-error', icon: '×', title: 'Erro' },
+                warning: { cls: 'popup-warning', icon: '!', title: 'Alerta' }
             };
             const conf = config[type] || config.success;
             const el = document.createElement('div');
-            el.className = `toast show ${conf.cls}`;
+            el.className = `popup show ${conf.cls}`;
             el.innerHTML = `
-                <div class="toast-icon">${conf.icon}</div>
-                <div class="toast-body">
-                    <div class="toast-title">${conf.title}</div>
-                    <div class="toast-message">${message}</div>
+                <div class="popup-icon">${conf.icon}</div>
+                <div class="popup-body">
+                    <div class="popup-title">${conf.title}</div>
+                    <div class="popup-message">${message}</div>
                 </div>
-                <button class="toast-close" aria-label="Fechar">&times;</button>
+                <button class="popup-close" aria-label="Fechar">&times;</button>
             `;
-            el.querySelector('.toast-close').addEventListener('click', () => el.remove());
-            toastContainer.appendChild(el);
+            el.querySelector('.popup-close').addEventListener('click', () => el.remove());
+            popupContainer.appendChild(el);
             setTimeout(() => {
                 el.classList.add('hide');
                 setTimeout(() => el.remove(), 300);
             }, 3200);
         }
-        function triggerToast(message, type) {
-            const run = () => showToast(message, type);
+        function triggerPopup(message, type) {
+            const run = () => showPopup(message, type);
             if (document.readyState === 'complete') {
                 run();
             } else {
@@ -153,10 +158,10 @@ $categorias = $pdo->query('SELECT id, nome FROM categorias ORDER BY nome')->fetc
             }
         }
         <?php if ($success): ?>
-        triggerToast(<?= json_encode($success) ?>, 'success');
+        triggerPopup(<?= json_encode($success) ?>, 'success');
         <?php endif; ?>
         <?php if ($error): ?>
-        triggerToast(<?= json_encode($error) ?>, 'error');
+        triggerPopup(<?= json_encode($error) ?>, <?= json_encode($popupType ?: 'error') ?>);
         <?php endif; ?>
     </script>
 </body>

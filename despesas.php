@@ -200,17 +200,6 @@ foreach ($despesas as $d) {
     </style>
 </head>
 <body class="<?php echo themeClass($theme); ?>">
-    <header class="topbar-global">
-        <div class="brand">
-            <span class="brand-dot"></span>
-            <span>ProHelp Financeiro</span>
-        </div>
-        <div class="actions">
-            <span class="small">Data/Hora: <?php echo htmlspecialchars($dataHora); ?></span>
-            <a href="#" class="topbar-btn" onclick="return false;">Ajuda</a>
-            <a href="principal.php" class="topbar-btn">Menu</a>
-        </div>
-    </header>
     <div class="page-container">
     <div class="box">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 no-print">
@@ -367,36 +356,36 @@ foreach ($despesas as $d) {
             window.print();
         });
     </script>
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="popup-container" id="popupContainer"></div>
     <script>
-        const toastContainer = document.getElementById('toastContainer');
-        function showToast(message, type = 'success') {
-            if (!toastContainer) return;
+        const popupContainer = document.getElementById('popupContainer');
+        function showPopup(message, type = 'success') {
+            if (!popupContainer) return;
             const config = {
-                success: { cls: 'toast-success', icon: '✓', title: 'Sucesso' },
-                error: { cls: 'toast-error', icon: '×', title: 'Erro' },
-                warning: { cls: 'toast-warning', icon: '!', title: 'Alerta' }
+                success: { cls: 'popup-success', icon: '✓', title: 'Sucesso' },
+                error: { cls: 'popup-error', icon: '×', title: 'Erro' },
+                warning: { cls: 'popup-warning', icon: '!', title: 'Alerta' }
             };
             const conf = config[type] || config.success;
             const el = document.createElement('div');
-            el.className = `toast show ${conf.cls}`;
+            el.className = `popup show ${conf.cls}`;
             el.innerHTML = `
-                <div class="toast-icon">${conf.icon}</div>
-                <div class="toast-body">
-                    <div class="toast-title">${conf.title}</div>
-                    <div class="toast-message">${message}</div>
+                <div class="popup-icon">${conf.icon}</div>
+                <div class="popup-body">
+                    <div class="popup-title">${conf.title}</div>
+                    <div class="popup-message">${message}</div>
                 </div>
-                <button class="toast-close" aria-label="Fechar">&times;</button>
+                <button class="popup-close" aria-label="Fechar">&times;</button>
             `;
-            el.querySelector('.toast-close').addEventListener('click', () => el.remove());
-            toastContainer.appendChild(el);
+            el.querySelector('.popup-close').addEventListener('click', () => el.remove());
+            popupContainer.appendChild(el);
             setTimeout(() => {
                 el.classList.add('hide');
                 setTimeout(() => el.remove(), 300);
             }, 3200);
         }
-        function triggerToast(message, type) {
-            const run = () => showToast(message, type);
+        function triggerPopup(message, type) {
+            const run = () => showPopup(message, type);
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', run);
             } else {
@@ -404,10 +393,10 @@ foreach ($despesas as $d) {
             }
         }
         <?php if ($successMsg): ?>
-        triggerToast(<?= json_encode($successMsg) ?>, 'success');
+        triggerPopup(<?= json_encode($successMsg) ?>, 'success');
         <?php endif; ?>
         <?php if ($errorMsg): ?>
-        triggerToast(<?= json_encode($errorMsg) ?>, 'error');
+        triggerPopup(<?= json_encode($errorMsg) ?>, 'error');
         <?php endif; ?>
     </script>
 </body>

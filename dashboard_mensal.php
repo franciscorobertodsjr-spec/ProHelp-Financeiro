@@ -85,6 +85,49 @@ $parValores = [
     isset($parData[1]) ? (float)$parData[1] : 0,
     isset($parData[0]) ? (float)$parData[0] : 0
 ];
+
+$prevIniDt = new DateTime($inicio);
+$prevIniDt->modify('first day of last month');
+$prevFimDt = new DateTime($prevIniDt->format('Y-m-d'));
+$prevFimDt->modify('last day of this month');
+$inicioAnterior = $prevIniDt->format('Y-m-d');
+$fimAnterior = $prevFimDt->format('Y-m-d');
+$mesAnteriorLabel = $prevIniDt->format('Y-m');
+
+$varStmt = $pdo->prepare("
+    SELECT
+        COALESCE(categoria, 'Sem categoria') AS categoria,
+        SUM(CASE WHEN data_vencimento BETWEEN ? AND ? THEN valor ELSE 0 END) AS total_atual,
+        SUM(CASE WHEN data_vencimento BETWEEN ? AND ? THEN valor ELSE 0 END) AS total_anterior
+    FROM despesas
+    WHERE (data_vencimento BETWEEN ? AND ?) OR (data_vencimento BETWEEN ? AND ?)
+    GROUP BY categoria
+");
+$varStmt->execute([$inicio, $fim, $inicioAnterior, $fimAnterior, $inicio, $fim, $inicioAnterior, $fimAnterior]);
+$variacoes = [];
+foreach ($varStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $atual = (float)$row['total_atual'];
+    $anterior = (float)$row['total_anterior'];
+    $delta = $atual - $anterior;
+    $variacoes[] = [
+        'categoria' => $row['categoria'],
+        'atual' => $atual,
+        'anterior' => $anterior,
+        'delta' => $delta
+    ];
+}
+$crescentes = array_values(array_filter($variacoes, static fn($v) => $v['delta'] > 0));
+usort($crescentes, static fn($a, $b) => $b['delta'] <=> $a['delta']);
+$crescentes = array_slice($crescentes, 0, 10);
+
+$decrescentes = array_values(array_filter($variacoes, static fn($v) => $v['delta'] < 0));
+usort($decrescentes, static fn($a, $b) => $a['delta'] <=> $b['delta']);
+$decrescentes = array_slice($decrescentes, 0, 10);
+
+$cresLabels = array_column($crescentes, 'categoria');
+$cresValores = array_map(static fn($v) => round($v['delta'], 2), $crescentes);
+$quedaLabels = array_column($decrescentes, 'categoria');
+$quedaValores = array_map(static fn($v) => round($v['delta'], 2), $decrescentes);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -192,22 +235,68 @@ $parValores = [
                     <canvas id="chartDia"></canvas>
                 </div>
             </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h5 class="fw-bold">Top 10 categorias que cresceram (<?= htmlspecialchars($mesAnteriorLabel) ?> → <?= htmlspecialchars("$ano-$mes") ?>)</h5>
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Categoria</th><th>Atual</th><th>Anterior</th><th>Variação</th></tr></thead>
+                    <tbody>
+                        <?php if (!$crescentes): ?>
+                            <tr><td colspan="4" class="text-muted text-center">Sem dados</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($crescentes as $c): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($c['categoria']) ?></td>
+                                    <td>R$ <?= number_format((float)$c['atual'], 2, ',', '.') ?></td>
+                                    <td>R$ <?= number_format((float)$c['anterior'], 2, ',', '.') ?></td>
+                                    <td class="text-success fw-semibold">+R$ <?= number_format((float)$c['delta'], 2, ',', '.') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+                <div class="chart-box">
+                    <canvas id="chartCres"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h5 class="fw-bold">Top 10 categorias que caíram (<?= htmlspecialchars($mesAnteriorLabel) ?> → <?= htmlspecialchars("$ano-$mes") ?>)</h5>
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Categoria</th><th>Atual</th><th>Anterior</th><th>Variação</th></tr></thead>
+                    <tbody>
+                        <?php if (!$decrescentes): ?>
+                            <tr><td colspan="4" class="text-muted text-center">Sem dados</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($decrescentes as $c): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($c['categoria']) ?></td>
+                                    <td>R$ <?= number_format((float)$c['atual'], 2, ',', '.') ?></td>
+                                    <td>R$ <?= number_format((float)$c['anterior'], 2, ',', '.') ?></td>
+                                    <td class="text-danger fw-semibold">-R$ <?= number_format(abs((float)$c['delta']), 2, ',', '.') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+                <div class="chart-box">
+                    <canvas id="chartQueda"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4">
             <div class="col-md-6">
                 <h5 class="fw-bold">Distribuição por status</h5>
                 <div class="chart-box">
                     <canvas id="chartStatus"></canvas>
                 </div>
             </div>
+        </div>
+        <div class="row g-4">
             <div class="col-md-6">
-                <h5 class="fw-bold">Recorrente x Não recorrente</h5>
+                <h5 class="fw-bold">Distribuição por status</h5>
                 <div class="chart-box">
-                    <canvas id="chartRec"></canvas>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <h5 class="fw-bold">Parcelado x Não parcelado</h5>
-                <div class="chart-box">
-                    <canvas id="chartPar"></canvas>
+                    <canvas id="chartStatus"></canvas>
                 </div>
             </div>
         </div>
@@ -218,6 +307,30 @@ $parValores = [
         const chartBorder = themeStyles.getPropertyValue('--border-color').trim() || '#e5e7eb';
         Chart.defaults.color = chartText;
         Chart.defaults.borderColor = chartBorder;
+        const valuePlugin = {
+            id: 'valuePlugin',
+            afterDatasetsDraw(chart) {
+                const {ctx} = chart;
+                ctx.save();
+                ctx.fillStyle = chartText;
+                ctx.font = '12px sans-serif';
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    if (!chart.isDatasetVisible(i)) return;
+                    meta.data.forEach((element, index) => {
+                        const raw = dataset.data[index];
+                        if (raw === null || raw === undefined) return;
+                        const value = typeof raw === 'number' ? raw : Number(raw) || 0;
+                        const label = 'R$ ' + value.toLocaleString('pt-BR');
+                        const pos = element.tooltipPosition();
+                        const y = pos.y - 6;
+                        ctx.fillText(label, pos.x, y);
+                    });
+                });
+                ctx.restore();
+            }
+        };
+        Chart.register(valuePlugin);
 
         const ctxDia = document.getElementById('chartDia');
         const labelsDia = <?= json_encode($labelsDia, JSON_UNESCAPED_UNICODE) ?>;
@@ -268,37 +381,48 @@ $parValores = [
             });
         }
 
-        const ctxRec = document.getElementById('chartRec');
-        const recLabels = <?= json_encode($recLabels, JSON_UNESCAPED_UNICODE) ?>;
-        const recValores = <?= json_encode($recValores, JSON_UNESCAPED_UNICODE) ?>;
-        if (ctxRec) {
-            new Chart(ctxRec, {
-                type: 'doughnut',
+
+        const ctxCres = document.getElementById('chartCres');
+        const cresLabels = <?= json_encode($cresLabels, JSON_UNESCAPED_UNICODE) ?>;
+        const cresValores = <?= json_encode($cresValores, JSON_UNESCAPED_UNICODE) ?>;
+        if (ctxCres && cresLabels.length > 0) {
+            new Chart(ctxCres, {
+                type: 'bar',
                 data: {
-                    labels: recLabels,
+                    labels: cresLabels,
                     datasets: [{
-                        data: recValores,
-                        backgroundColor: ['#10b981','#e5e7eb']
+                        label: 'Variação (R$)',
+                        data: cresValores,
+                        backgroundColor: '#10b981'
                     }]
                 },
-                options: { plugins: { legend: { position: 'bottom' } } }
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+                }
             });
         }
 
-        const ctxPar = document.getElementById('chartPar');
-        const parLabels = <?= json_encode($parLabels, JSON_UNESCAPED_UNICODE) ?>;
-        const parValores = <?= json_encode($parValores, JSON_UNESCAPED_UNICODE) ?>;
-        if (ctxPar) {
-            new Chart(ctxPar, {
-                type: 'doughnut',
+        const ctxQueda = document.getElementById('chartQueda');
+        const quedaLabels = <?= json_encode($quedaLabels, JSON_UNESCAPED_UNICODE) ?>;
+        const quedaValores = <?= json_encode($quedaValores, JSON_UNESCAPED_UNICODE) ?>;
+        if (ctxQueda && quedaLabels.length > 0) {
+            new Chart(ctxQueda, {
+                type: 'bar',
                 data: {
-                    labels: parLabels,
+                    labels: quedaLabels,
                     datasets: [{
-                        data: parValores,
-                        backgroundColor: ['#6366f1','#e5e7eb']
+                        label: 'Variação (R$)',
+                        data: quedaValores,
+                        backgroundColor: '#ef4444'
                     }]
                 },
-                options: { plugins: { legend: { position: 'bottom' } } }
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+                }
             });
         }
     </script>

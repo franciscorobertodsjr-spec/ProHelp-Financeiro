@@ -9,7 +9,6 @@ require_once 'theme.php';
 
 $isAdmin = !empty($_SESSION['is_admin']);
 $theme = handleTheme($pdo);
-$dataHora = (new DateTime())->format('d/m/Y H:i');
 
 $avisoProximo = [];
 try {
@@ -44,7 +43,7 @@ try {
             min-height: 100vh;
             color: var(--text-color);
         }
-        .layout { display: flex; min-height: calc(100vh - 60px); }
+        .layout { display: flex; min-height: 100vh; }
         .sidebar {
             width: 260px;
             background-color: #0f7b63 !important;
@@ -57,6 +56,7 @@ try {
             box-shadow: 2px 0 14px rgba(0,0,0,0.12);
             transition: width 0.25s ease, padding 0.25s ease;
             border-right: 1px solid rgba(0,0,0,0.08);
+            min-height: 100vh;
         }
         body.theme-dark .sidebar {
             background-color: #0f7b63 !important;
@@ -161,6 +161,24 @@ try {
             text-align: center;
         }
         .logout-link:hover { background: rgba(16,185,129,0.18); color: #ecfdf3; }
+        .sidebar-actions {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sidebar-actions a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: #e8f7f1;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .sidebar-actions a:hover { background: rgba(0,0,0,0.15); color: #ecfdf3; }
         .content { flex: 1; padding: 28px 34px; display: flex; flex-direction: column; gap: 18px; }
         .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .toggle-btn {
@@ -206,17 +224,6 @@ try {
     </style>
 </head>
 <body class="<?php echo themeClass($theme); ?>">
-    <header class="topbar-global">
-        <div class="brand">
-            <span class="brand-dot"></span>
-            <span>ProHelp Financeiro</span>
-        </div>
-        <div class="actions">
-            <span class="small">Data/Hora: <?php echo htmlspecialchars($dataHora); ?></span>
-            <a href="#" class="topbar-btn" onclick="return false;">Ajuda</a>
-            <a href="logout.php" class="topbar-btn">Sair</a>
-        </div>
-    </header>
     <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div class="brand">
@@ -275,6 +282,10 @@ try {
                         <?php endif; ?>
                     </div>
                 </div>
+            </div>
+            <div class="sidebar-actions">
+                <a href="#" onclick="return false;"><span class="menu-icon">❓</span><span class="menu-label">Ajuda</span></a>
+                <a href="logout.php" class="logout-link"><span class="menu-icon">🚪</span><span class="menu-label">Sair</span></a>
             </div>
         </aside>
         <main class="content">

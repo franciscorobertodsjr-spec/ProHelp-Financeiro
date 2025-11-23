@@ -5,6 +5,7 @@ require_once 'theme.php';
 
 $success = '';
 $error = '';
+$popupType = '';
 
 $theme = handleTheme($pdo);
 
@@ -15,21 +16,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$username || !$password || !$confirm) {
         $error = 'Preencha todos os campos!';
+        $popupType = 'warning';
     } elseif ($password !== $confirm) {
         $error = 'As senhas não conferem.';
+        $popupType = 'warning';
     } else {
         // Verifica se já existe usuário
         $stmt = $pdo->prepare('SELECT id FROM usuarios WHERE username = ?');
         $stmt->execute([$username]);
         if ($stmt->fetch()) {
             $error = 'Usuário já cadastrado!';
+            $popupType = 'error';
         } else {
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare('INSERT INTO usuarios (username, password_hash, is_admin, ativo, tema) VALUES (?, ?, 0, 0, 0)');
             if ($stmt->execute([$username, $hash])) {
                 $success = 'Usuário cadastrado com sucesso!';
+                $popupType = 'success';
             } else {
                 $error = 'Erro ao cadastrar usuário!';
+                $popupType = 'error';
             }
         }
     }
@@ -103,36 +109,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a href="index.php" class="btn btn-outline-secondary w-100">Voltar ao Login</a>
         </div>
     </div>
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="popup-container" id="popupContainer"></div>
     <script>
-        const toastContainer = document.getElementById('toastContainer');
-        function showToast(message, type = 'success') {
-            if (!toastContainer) return;
+        const popupContainer = document.getElementById('popupContainer');
+        function showPopup(message, type = 'success') {
+            if (!popupContainer) return;
             const config = {
-                success: { cls: 'toast-success', icon: '✓', title: 'Sucesso' },
-                error: { cls: 'toast-error', icon: '×', title: 'Erro' },
-                warning: { cls: 'toast-warning', icon: '!', title: 'Alerta' }
+                success: { cls: 'popup-success', icon: '✓', title: 'Sucesso' },
+                error: { cls: 'popup-error', icon: '×', title: 'Erro' },
+                warning: { cls: 'popup-warning', icon: '!', title: 'Alerta' }
             };
             const conf = config[type] || config.success;
             const el = document.createElement('div');
-            el.className = `toast show ${conf.cls}`;
+            el.className = `popup show ${conf.cls}`;
             el.innerHTML = `
-                <div class="toast-icon">${conf.icon}</div>
-                <div class="toast-body">
-                    <div class="toast-title">${conf.title}</div>
-                    <div class="toast-message">${message}</div>
+                <div class="popup-icon">${conf.icon}</div>
+                <div class="popup-body">
+                    <div class="popup-title">${conf.title}</div>
+                    <div class="popup-message">${message}</div>
                 </div>
-                <button class="toast-close" aria-label="Fechar">&times;</button>
+                <button class="popup-close" aria-label="Fechar">&times;</button>
             `;
-            el.querySelector('.toast-close').addEventListener('click', () => el.remove());
-            toastContainer.appendChild(el);
+            el.querySelector('.popup-close').addEventListener('click', () => el.remove());
+            popupContainer.appendChild(el);
             setTimeout(() => {
                 el.classList.add('hide');
                 setTimeout(() => el.remove(), 300);
             }, 3200);
         }
-        function triggerToast(message, type) {
-            const run = () => showToast(message, type);
+        function triggerPopup(message, type) {
+            const run = () => showPopup(message, type);
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', run);
             } else {
@@ -140,10 +146,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         <?php if ($success): ?>
-        triggerToast(<?= json_encode($success) ?>, 'success');
+        triggerPopup(<?= json_encode($success) ?>, 'success');
         <?php endif; ?>
         <?php if ($error): ?>
-        triggerToast(<?= json_encode($error) ?>, 'error');
+        triggerPopup(<?= json_encode($error) ?>, <?= json_encode($popupType ?: 'error') ?>);
         <?php endif; ?>
     </script>
     <script>
