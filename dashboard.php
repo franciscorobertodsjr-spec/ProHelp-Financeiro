@@ -92,17 +92,18 @@ $parValores = [
         body {
             background: var(--page-bg);
             min-height: 100vh;
-            padding: 24px 12px;
             font-family: 'Segoe UI', Arial, sans-serif;
             color: var(--text-color);
         }
+        .page-container { padding: 18px; }
         .box {
             max-width: 1200px;
             margin: 0 auto;
             background: var(--surface-color);
-            border-radius: 14px;
-            box-shadow: var(--shadow-strong);
-            padding: 22px;
+            border-radius: 12px;
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+            padding: 18px;
         }
         .card-metric {
             background: #0d6efd;
@@ -122,14 +123,26 @@ $parValores = [
         }
         .chart-row { row-gap: 16px; }
         @media (max-width: 576px) {
-            body { padding: 16px 8px; }
-            .box { padding: 18px; }
+            .page-container { padding: 12px; }
+            .box { padding: 16px; }
             .d-flex.align-items-end.gap-2 { flex-wrap: wrap; }
             .d-flex.align-items-end.gap-2 .btn { width: auto; }
         }
     </style>
 </head>
 <body class="<?php echo themeClass($theme); ?>">
+    <header class="topbar-global">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>ProHelp Financeiro</span>
+        </div>
+        <div class="actions">
+            <span class="small">Data/Hora: <?php echo htmlspecialchars($dataHora); ?></span>
+            <a href="#" class="topbar-btn" onclick="return false;">Ajuda</a>
+            <a href="principal.php" class="topbar-btn">Menu</a>
+        </div>
+    </header>
+    <div class="page-container">
     <div class="box">
         <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-3">
             <div>
@@ -343,5 +356,7 @@ $parValores = [
             });
         }
     </script>
+    </div>
+    </div>
 </body>
 </html>

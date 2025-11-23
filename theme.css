@@ -1,33 +1,41 @@
 :root {
-    --page-bg: #f4f6f9;
+    --page-bg: #eef3f7;
     --text-color: #1f2937;
     --muted-color: #4b5563;
-    --surface-color: #ffffff;
-    --surface-soft: #f3f4f6;
-    --border-color: #e5e7eb;
-    --shadow-strong: 0 10px 26px rgba(0, 0, 0, 0.08);
-    --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.08);
+    --surface-color: #f9fbfd;
+    --surface-soft: #f1f4f8;
+    --border-color: #d9e1eb;
+    --shadow-strong: 0 6px 16px rgba(0, 0, 0, 0.08);
+    --shadow-soft: 0 4px 10px rgba(0, 0, 0, 0.06);
     --input-bg: #ffffff;
-    --link-color: #0d9467;
-    --link-hover: #0a7a55;
+    --link-color: #0ea271;
+    --link-hover: #0c8f62;
     --brand: #10b981;
     --brand-strong: #0ea271;
+    --sidebar-bg: #0f7b63;
+    --sidebar-bg-2: #0c6b56;
+    --sidebar-text: #e8f7f1;
+    --topbar-bg: #0ea271;
 }
 
 body.theme-dark {
     --page-bg: #0b1220;
     --text-color: #e5e7eb;
     --muted-color: #cbd5e1;
-    --surface-color: #111827;
-    --surface-soft: #1f2937;
+    --surface-color: #0f172a;
+    --surface-soft: #111827;
     --border-color: #1f2937;
-    --shadow-strong: 0 10px 26px rgba(0, 0, 0, 0.4);
-    --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.35);
-    --input-bg: #0f172a;
+    --shadow-strong: 0 6px 16px rgba(0, 0, 0, 0.35);
+    --shadow-soft: 0 4px 10px rgba(0, 0, 0, 0.3);
+    --input-bg: #111827;
     --link-color: #34d399;
     --link-hover: #10b981;
     --brand: #10b981;
     --brand-strong: #0ea271;
+    --sidebar-bg: #0f7b63;
+    --sidebar-bg-2: #0c6b56;
+    --sidebar-text: #e8f7f1;
+    --topbar-bg: #0ea271;
 }
 
 * { box-sizing: border-box; }
@@ -44,7 +52,8 @@ body {
 .chart-box {
     background: var(--surface-color);
     color: var(--text-color);
-    box-shadow: var(--shadow-strong);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--border-color);
 }
 
 .table {
@@ -161,4 +170,120 @@ a:hover {
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+.topbar-global {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--topbar-bg);
+    color: #fdfdfd;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+.topbar-global .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 18px;
+}
+.topbar-global .brand-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    opacity: 0.9;
+}
+.topbar-global .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.topbar-btn {
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: #ffffff;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.topbar-btn:hover { background: rgba(255,255,255,0.25); }
+
+.page-container {
+    padding: 20px 18px;
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 2000;
+}
+.toast {
+    min-width: 320px;
+    max-width: 460px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: #f8fafc;
+    background: #2ba560;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    animation: slideIn 0.25s ease;
+}
+.toast-success { background: #2ba560; }
+.toast-error { background: #d1413d; }
+.toast-warning { background: #f59f00; color: #1f2937; }
+.toast-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.12);
+}
+.toast-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.toast-title {
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.3;
+}
+.toast-message {
+    font-size: 13px;
+    line-height: 1.4;
+    opacity: 0.95;
+}
+.toast-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+    opacity: 0.85;
+    cursor: pointer;
+}
+.toast.hide { opacity: 0; transform: translateX(10px); transition: opacity 0.25s ease, transform 0.25s ease; }
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
 }

@@ -106,5 +106,58 @@ $categorias = $pdo->query('SELECT id, nome FROM categorias ORDER BY nome')->fetc
             </table>
         </div>
     </div>
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        function getToastContainer() {
+            let c = document.getElementById('toastContainer');
+            if (!c) {
+                c = document.createElement('div');
+                c.id = 'toastContainer';
+                c.className = 'toast-container';
+                document.body.appendChild(c);
+            }
+            return c;
+        }
+        function showToast(message, type = 'success') {
+            const toastContainer = getToastContainer();
+            if (!toastContainer) return;
+            const config = {
+                success: { cls: 'toast-success', icon: '✓', title: 'Sucesso' },
+                error: { cls: 'toast-error', icon: '×', title: 'Erro' },
+                warning: { cls: 'toast-warning', icon: '!', title: 'Alerta' }
+            };
+            const conf = config[type] || config.success;
+            const el = document.createElement('div');
+            el.className = `toast show ${conf.cls}`;
+            el.innerHTML = `
+                <div class="toast-icon">${conf.icon}</div>
+                <div class="toast-body">
+                    <div class="toast-title">${conf.title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" aria-label="Fechar">&times;</button>
+            `;
+            el.querySelector('.toast-close').addEventListener('click', () => el.remove());
+            toastContainer.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('hide');
+                setTimeout(() => el.remove(), 300);
+            }, 3200);
+        }
+        function triggerToast(message, type) {
+            const run = () => showToast(message, type);
+            if (document.readyState === 'complete') {
+                run();
+            } else {
+                window.addEventListener('load', run);
+            }
+        }
+        <?php if ($success): ?>
+        triggerToast(<?= json_encode($success) ?>, 'success');
+        <?php endif; ?>
+        <?php if ($error): ?>
+        triggerToast(<?= json_encode($error) ?>, 'error');
+        <?php endif; ?>
+    </script>
 </body>
 </html>

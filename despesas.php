@@ -9,6 +9,7 @@ require_once 'config.php';
 require_once 'theme.php';
 
 $theme = handleTheme($pdo);
+$dataHora = (new DateTime())->format('d/m/Y H:i');
 
 $categoriasLista = $pdo->query('SELECT nome FROM categorias ORDER BY nome')->fetchAll(PDO::FETCH_COLUMN);
 
@@ -25,62 +26,77 @@ $parcelado = $_GET['parcelado'] ?? '';
 $successMsg = '';
 $errorMsg = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pagar_id'])) {
-    $idPagar = (int)$_POST['pagar_id'];
-    try {
-        $pdo->beginTransaction();
-        $sel = $pdo->prepare('SELECT * FROM despesas WHERE id = ? FOR UPDATE');
-        $sel->execute([$idPagar]);
-        $registro = $sel->fetch(PDO::FETCH_ASSOC);
-        if (!$registro) {
-            throw new Exception('Despesa não encontrada.');
-        }
-        if ($registro['status'] === 'Pago') {
-            throw new Exception('Esta despesa já está paga.');
-        }
-
-        $upd = $pdo->prepare('UPDATE despesas SET status = ?, data_pagamento = CURDATE() WHERE id = ?');
-        $upd->execute(['Pago', $idPagar]);
-
-        if ((int)$registro['recorrente'] === 1) {
-            $dt = new DateTime($registro['data_vencimento']);
-            $dt->modify('+1 month');
-            $proxVenc = $dt->format('Y-m-d');
-
-            $dupCheck = $pdo->prepare('SELECT COUNT(*) FROM despesas WHERE descricao = ? AND data_vencimento = ? AND recorrente = 1');
-            $dupCheck->execute([$registro['descricao'], $proxVenc]);
-            $exists = $dupCheck->fetchColumn();
-
-            if (!$exists) {
-                $ins = $pdo->prepare(
-                    'INSERT INTO despesas (descricao, data_vencimento, valor, data_pagamento, juros, total_pago, status, recorrente, parcelado, numero_parcela, total_parcelas, grupo_parcelas, categoria, forma_pagamento, observacao, local)
-                     VALUES (?, ?, ?, NULL, ?, NULL, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)'
-                );
-                $ins->execute([
-                    $registro['descricao'],
-                    $proxVenc,
-                    $registro['valor'],
-                    $registro['juros'],
-                    'Previsto',
-                    $registro['parcelado'],
-                    $registro['numero_parcela'],
-                    $registro['total_parcelas'],
-                    $registro['grupo_parcelas'],
-                    $registro['categoria'],
-                    $registro['forma_pagamento'],
-                    $registro['observacao'],
-                    $registro['local']
-                ]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['delete_id'])) {
+        $idDelete = (int)$_POST['delete_id'];
+        try {
+            $del = $pdo->prepare('DELETE FROM despesas WHERE id = ?');
+            $del->execute([$idDelete]);
+            if ($del->rowCount() > 0) {
+                $successMsg = 'Despesa excluída com sucesso.';
+            } else {
+                $errorMsg = 'Despesa não encontrada.';
             }
+        } catch (Exception $e) {
+            $errorMsg = 'Erro ao excluir: ' . $e->getMessage();
         }
+    } elseif (isset($_POST['pagar_id'])) {
+        $idPagar = (int)$_POST['pagar_id'];
+        try {
+            $pdo->beginTransaction();
+            $sel = $pdo->prepare('SELECT * FROM despesas WHERE id = ? FOR UPDATE');
+            $sel->execute([$idPagar]);
+            $registro = $sel->fetch(PDO::FETCH_ASSOC);
+            if (!$registro) {
+                throw new Exception('Despesa não encontrada.');
+            }
+            if ($registro['status'] === 'Pago') {
+                throw new Exception('Esta despesa já está paga.');
+            }
 
-        $pdo->commit();
-        $successMsg = 'Despesa marcada como paga e próxima previsão criada (se recorrente).';
-    } catch (Exception $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
+            $upd = $pdo->prepare('UPDATE despesas SET status = ?, data_pagamento = CURDATE() WHERE id = ?');
+            $upd->execute(['Pago', $idPagar]);
+
+            if ((int)$registro['recorrente'] === 1) {
+                $dt = new DateTime($registro['data_vencimento']);
+                $dt->modify('+1 month');
+                $proxVenc = $dt->format('Y-m-d');
+
+                $dupCheck = $pdo->prepare('SELECT COUNT(*) FROM despesas WHERE descricao = ? AND data_vencimento = ? AND recorrente = 1');
+                $dupCheck->execute([$registro['descricao'], $proxVenc]);
+                $exists = $dupCheck->fetchColumn();
+
+                if (!$exists) {
+                    $ins = $pdo->prepare(
+                        'INSERT INTO despesas (descricao, data_vencimento, valor, data_pagamento, juros, total_pago, status, recorrente, parcelado, numero_parcela, total_parcelas, grupo_parcelas, categoria, forma_pagamento, observacao, local)
+                         VALUES (?, ?, ?, NULL, ?, NULL, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    );
+                    $ins->execute([
+                        $registro['descricao'],
+                        $proxVenc,
+                        $registro['valor'],
+                        $registro['juros'],
+                        'Previsto',
+                        $registro['parcelado'],
+                        $registro['numero_parcela'],
+                        $registro['total_parcelas'],
+                        $registro['grupo_parcelas'],
+                        $registro['categoria'],
+                        $registro['forma_pagamento'],
+                        $registro['observacao'],
+                        $registro['local']
+                    ]);
+                }
+            }
+
+            $pdo->commit();
+            $successMsg = 'Despesa marcada como paga e próxima previsão criada (se recorrente).';
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $errorMsg = $e->getMessage();
         }
-        $errorMsg = $e->getMessage();
     }
 }
 
@@ -141,19 +157,19 @@ foreach ($despesas as $d) {
         body {
             background: var(--page-bg);
             min-height: 100vh;
-            padding: 24px 12px;
             font-family: 'Segoe UI', Arial, sans-serif;
             color: var(--text-color);
         }
+        .page-container { padding: 18px; }
         .box {
             max-width: 1200px;
             margin: 0 auto;
             background: var(--surface-color);
-            border-radius: 14px;
-            box-shadow: var(--shadow-strong);
-            padding: 22px;
+            border-radius: 12px;
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+            padding: 18px;
         }
-        body.theme-dark .box { box-shadow: var(--shadow-strong); }
         @media print {
             .no-print { display: none !important; }
             body { background: #fff; color: #000; }
@@ -184,6 +200,18 @@ foreach ($despesas as $d) {
     </style>
 </head>
 <body class="<?php echo themeClass($theme); ?>">
+    <header class="topbar-global">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>ProHelp Financeiro</span>
+        </div>
+        <div class="actions">
+            <span class="small">Data/Hora: <?php echo htmlspecialchars($dataHora); ?></span>
+            <a href="#" class="topbar-btn" onclick="return false;">Ajuda</a>
+            <a href="principal.php" class="topbar-btn">Menu</a>
+        </div>
+    </header>
+    <div class="page-container">
     <div class="box">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 no-print">
             <h3 class="fw-bold mb-0">Despesas</h3>
@@ -271,7 +299,7 @@ foreach ($despesas as $d) {
                                 <th>Forma pgto</th>
                                 <th>Parcela</th>
                         <th>Recorrente</th>
-                        <th class="no-print">Ação</th>
+                        <th class="no-print text-end">Ação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -307,13 +335,19 @@ foreach ($despesas as $d) {
                                     </td>
                                     <td><?= $d['recorrente'] ? 'Sim' : 'Não' ?></td>
                                     <td class="no-print">
-                                        <a href="despesa_edit.php?id=<?= (int)$d['id'] ?>" class="btn btn-sm btn-outline-primary">Editar</a>
-                                        <?php if ($d['status'] !== 'Pago'): ?>
-                                            <form method="post" class="d-inline">
-                                                <input type="hidden" name="pagar_id" value="<?= (int)$d['id'] ?>">
-                                                <button type="submit" class="btn btn-sm btn-success">Marcar pago</button>
+                                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                            <a href="despesa_edit.php?id=<?= (int)$d['id'] ?>" class="btn btn-sm btn-outline-primary">Editar</a>
+                                            <?php if ($d['status'] !== 'Pago'): ?>
+                                                <form method="post" class="d-inline">
+                                                    <input type="hidden" name="pagar_id" value="<?= (int)$d['id'] ?>">
+                                                    <button type="submit" class="btn btn-sm btn-success">Marcar pago</button>
+                                                </form>
+                                            <?php endif; ?>
+                                            <form method="post" class="d-inline" onsubmit="return confirm('Deseja excluir esta despesa?');">
+                                                <input type="hidden" name="delete_id" value="<?= (int)$d['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
                                             </form>
-                                        <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -332,6 +366,49 @@ foreach ($despesas as $d) {
         document.getElementById('btnPrint').addEventListener('click', () => {
             window.print();
         });
+    </script>
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        const toastContainer = document.getElementById('toastContainer');
+        function showToast(message, type = 'success') {
+            if (!toastContainer) return;
+            const config = {
+                success: { cls: 'toast-success', icon: '✓', title: 'Sucesso' },
+                error: { cls: 'toast-error', icon: '×', title: 'Erro' },
+                warning: { cls: 'toast-warning', icon: '!', title: 'Alerta' }
+            };
+            const conf = config[type] || config.success;
+            const el = document.createElement('div');
+            el.className = `toast show ${conf.cls}`;
+            el.innerHTML = `
+                <div class="toast-icon">${conf.icon}</div>
+                <div class="toast-body">
+                    <div class="toast-title">${conf.title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" aria-label="Fechar">&times;</button>
+            `;
+            el.querySelector('.toast-close').addEventListener('click', () => el.remove());
+            toastContainer.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('hide');
+                setTimeout(() => el.remove(), 300);
+            }, 3200);
+        }
+        function triggerToast(message, type) {
+            const run = () => showToast(message, type);
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', run);
+            } else {
+                run();
+            }
+        }
+        <?php if ($successMsg): ?>
+        triggerToast(<?= json_encode($successMsg) ?>, 'success');
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+        triggerToast(<?= json_encode($errorMsg) ?>, 'error');
+        <?php endif; ?>
     </script>
 </body>
 </html>

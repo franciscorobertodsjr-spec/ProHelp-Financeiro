@@ -217,5 +217,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
     </script>
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        function getToastContainer() {
+            let c = document.getElementById('toastContainer');
+            if (!c) {
+                c = document.createElement('div');
+                c.id = 'toastContainer';
+                c.className = 'toast-container';
+                document.body.appendChild(c);
+            }
+            return c;
+        }
+        function showToast(message, type = 'success') {
+            const toastContainer = getToastContainer();
+            if (!toastContainer) return;
+            const typeClass = type === 'error' ? 'toast-error' : (type === 'warning' ? 'toast-warning' : 'toast-success');
+            const icon = type === 'error' ? '×' : (type === 'warning' ? '!' : '✓');
+            const el = document.createElement('div');
+            el.className = `toast show ${typeClass}`;
+            el.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-text">${message}</div>`;
+            toastContainer.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('hide');
+                setTimeout(() => el.remove(), 300);
+            }, 3200);
+        }
+        function triggerToast(message, type) {
+            const run = () => showToast(message, type);
+            if (document.readyState === 'complete') {
+                run();
+            } else {
+                window.addEventListener('load', run);
+            }
+        }
+        <?php if ($success): ?>
+        triggerToast(<?= json_encode($success) ?>, 'success');
+        <?php endif; ?>
+        <?php if ($error): ?>
+        triggerToast(<?= json_encode($error) ?>, 'error');
+        <?php endif; ?>
+    </script>
 </body>
 </html>
