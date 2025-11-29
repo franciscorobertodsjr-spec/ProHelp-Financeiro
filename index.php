@@ -38,8 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Login - ProHelp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
     <style>
         body {
@@ -48,22 +47,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             justify-content: center;
             padding: 32px 12px;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
             color: var(--text-color);
-            background: linear-gradient(140deg, #0b1220 0%, #0b1f1a 50%, #082814 100%);
+            background: radial-gradient(120% 140% at 0% 0%, rgba(16,185,129,0.12), transparent 35%),
+                        radial-gradient(100% 120% at 100% 0%, rgba(14,165,233,0.12), transparent 30%),
+                        var(--page-bg);
         }
-        body.theme-light { background: linear-gradient(135deg, #e9fbf5 0%, #eefcf7 40%, #f5fffb 100%); }
         .login-layout {
             display: grid;
             grid-template-columns: 1.1fr 0.9fr;
             width: 100%;
             max-width: 1080px;
-            background: #fff;
+            background: var(--surface-color);
             border-radius: 18px;
             overflow: hidden;
-            box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+            box-shadow: var(--shadow-strong);
+            border: 1px solid var(--border-color);
         }
-        body.theme-dark .login-layout { background: #0f172a; }
         .hero {
             position: relative;
             padding: 48px 40px;
@@ -103,9 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: flex;
             flex-direction: column;
             gap: 16px;
-            background: #fff;
+            background: var(--surface-color);
         }
-        body.theme-dark .form-side { background: #0f172a; }
         .login-card {
             width: 100%;
             max-width: 420px;
@@ -116,9 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .login-card h3 {
             margin: 0;
-            font-weight: 700;
-            font-size: 24px;
-            color: var(--text-color);
+            font-weight: 800;
+            font-size: 26px;
         }
         .login-card .muted {
             color: var(--muted-color);
@@ -157,12 +155,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .btn-primary {
             background: linear-gradient(90deg, #0ea271, #34d399);
             border: none;
-            border-radius: 999px;
-            padding: 10px 14px;
-            font-weight: 700;
-            box-shadow: 0 12px 30px rgba(16,185,129,0.35);
+            border-radius: 12px;
+            padding: 11px 16px;
+            font-weight: 800;
+            box-shadow: 0 14px 28px rgba(16,185,129,0.35);
         }
-        .btn-primary:hover { filter: brightness(1.04); }
+        .btn-primary:hover { filter: brightness(1.04); box-shadow: 0 18px 32px rgba(16,185,129,0.45); }
         .btn-link {
             color: #0ea271;
             text-decoration: none;
@@ -171,8 +169,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         @media (max-width: 900px) {
             .login-layout { grid-template-columns: 1fr; }
             .hero { display: none; }
-            body { background: linear-gradient(135deg, #0f766e 0%, #0ea271 60%, #34d399 100%); }
-            body.theme-light { background: #f5f6fb; }
         }
     </style>
 </head>
@@ -180,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form method="post" class="position-absolute" style="top:16px; right:16px; z-index: 2;">
         <input type="hidden" name="toggle_theme" value="1">
         <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'index.php'); ?>">
-        <button type="submit" class="btn btn-outline-secondary btn-sm">Tema: <?php echo themeLabel($theme); ?></button>
+        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-4">Tema: <?php echo themeLabel($theme); ?></button>
     </form>
     <div class="login-layout">
         <div class="hero">
@@ -229,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
     <script>
         const toggleLoginPassword = document.getElementById('toggleLoginPassword');
         const loginPasswordInput = document.getElementById('password');

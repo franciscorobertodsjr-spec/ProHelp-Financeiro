@@ -4,6 +4,7 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit;
 }
+
 require_once 'config.php';
 require_once 'theme.php';
 
@@ -33,316 +34,131 @@ try {
 <head>
     <meta charset="UTF-8">
     <title>Página Principal</title>
+    <link href="bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
     <style>
-        * { box-sizing: border-box; }
+        /* Fallback rápido caso theme.css não carregue no servidor */
         body {
             margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: var(--page-bg);
-            min-height: 100vh;
-            color: var(--text-color);
+            background: var(--page-bg, #eef3f7);
+            color: var(--text-color, #1f2937);
+            font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
         .layout { display: flex; min-height: 100vh; }
         .sidebar {
             width: 260px;
-            background-color: #0f7b63 !important;
-            background-image: linear-gradient(180deg, #0f7b63 0%, #0c6b56 100%);
+            background: linear-gradient(180deg, #0f172a 0%, #0b1f1a 100%);
             color: #e8f7f1;
-            padding: 22px 18px;
+            padding: 26px 20px;
             display: flex;
             flex-direction: column;
             gap: 18px;
-            box-shadow: 2px 0 14px rgba(0,0,0,0.12);
-            transition: width 0.25s ease, padding 0.25s ease;
-            border-right: 1px solid rgba(0,0,0,0.08);
-            min-height: 100vh;
+            box-shadow: 12px 0 40px rgba(0, 0, 0, 0.18);
         }
-        body.theme-dark .sidebar {
-            background-color: #0f7b63 !important;
-            background-image: linear-gradient(180deg, #0f7b63 0%, #0c6b56 100%);
-            color: #e8f7f1;
-        }
-        .sidebar.collapsed { width: 74px; padding: 22px 12px; }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 20px;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-        }
-        .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: #10b981; opacity: 0.95; }
-        .sidebar.collapsed .brand-text { display: none; }
-        .user-box {
-            background: rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 12px 14px;
-            line-height: 1.5;
-            transition: opacity 0.2s ease;
-            word-break: break-word;
-        }
-        .sidebar.collapsed .user-box { opacity: 0; pointer-events: none; height: 0; padding: 0; margin: 0; }
-        .user-box .label { opacity: 0.8; font-size: 13px; }
-        .user-box .value { font-weight: 700; }
-        .nav-links { display: flex; flex-direction: column; gap: 10px; flex: 1; }
-        .nav-links a, .nav-placeholder {
-            color: #e8f7f1;
-            text-decoration: none;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.08);
-            display: inline-block;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            transition: background 0.15s ease, color 0.15s ease;
-        }
-        .nav-links a:hover { background: rgba(0,0,0,0.15); color: #ecfdf3; }
-        .sidebar a { color: #e8f7f1; }
-        .sidebar.collapsed .nav-links a, .sidebar.collapsed .nav-placeholder { text-align: center; padding: 10px 0; }
-        .sidebar.collapsed .nav-placeholder { display: none; }
-        .nav-section {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .nav-title {
-            text-transform: uppercase;
-            font-size: 12px;
-            opacity: 0.7;
-            letter-spacing: 0.6px;
-            padding: 0 4px;
-        }
-        .nav-parent {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.06);
-            color: inherit;
-            cursor: pointer;
-            border: none;
-            width: 100%;
-        }
-        .nav-parent:hover { background: rgba(16,185,129,0.18); color: #ecfdf3; }
-        .nav-parent .chevron { transition: transform 0.2s ease; }
-        .nav-parent.open .chevron { transform: rotate(90deg); }
-        .nav-children {
-            display: none;
-            flex-direction: column;
-            gap: 6px;
-            padding-left: 10px;
-            margin-top: 6px;
-        }
-        .nav-children.show { display: flex; }
-        .menu-icon {
-            font-size: 14px;
-            margin-right: 8px;
-        }
-        .menu-label { display: inline; }
-        .sidebar.collapsed .nav-title { display: none; }
-        .sidebar.collapsed .menu-label { display: none; }
-        .sidebar.collapsed .chevron { display: none; }
-        .sidebar.collapsed .nav-parent { justify-content: center; padding: 12px 0; }
-        .sidebar.collapsed .nav-links a { padding: 10px 0; text-align: center; }
-        .sidebar.collapsed .nav-links a .menu-icon { margin-right: 0; }
-        .sidebar.collapsed .nav-children { display: none !important; }
-        .logout-link {
-            color: #f3f4f6;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-block;
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.25);
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: 0.4px; }
+        .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.15); }
+        .profile {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 14px 12px;
             text-align: center;
         }
-        .logout-link:hover { background: rgba(16,185,129,0.18); color: #ecfdf3; }
-        .sidebar-actions {
-            margin-top: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .avatar {
+            width: 78px; height: 78px; margin: 0 auto 10px auto; border-radius: 18px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.08));
+            display: grid; place-items: center; font-weight: 800; font-size: 26px; color: #f9fafb;
         }
-        .sidebar-actions a {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.08);
-            color: #e8f7f1;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .sidebar-actions a:hover { background: rgba(0,0,0,0.15); color: #ecfdf3; }
-        .content { flex: 1; padding: 28px 34px; display: flex; flex-direction: column; gap: 18px; }
-        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .toggle-btn {
-            border: none;
-            background: #10b981;
-            color: #0b1c2c;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 6px 16px rgba(16,185,129,0.28);
-            transition: background 0.15s ease, transform 0.1s ease;
-        }
-        .toggle-btn:hover { background: #0ea271; }
-        .toggle-btn:active { transform: translateY(1px); }
-        .theme-btn {
-            background: rgba(255,255,255,0.12);
-            color: inherit;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 8px;
-            padding: 8px 10px;
-            cursor: pointer;
-        }
-        .theme-btn:hover { background: rgba(255,255,255,0.2); }
-        .card {
-            background: var(--surface-color);
-            border-radius: 12px;
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            padding: 22px 24px;
-        }
-        body.theme-dark .card { box-shadow: var(--shadow-strong); }
-        .card h1 { margin: 0 0 8px 0; font-size: 24px; }
-        .card p { margin: 0; color: var(--muted-color); }
-        .alert-upcoming {
-            background: rgba(16,185,129,0.12);
-            border: 1px solid rgba(16,185,129,0.3);
-            color: var(--text-color);
-            border-radius: 10px;
-            padding: 14px 16px;
-        }
+        .menu { display: flex; flex-direction: column; gap: 8px; }
+        .menu a { color: #ecfdf3; text-decoration: none; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); font-weight: 600; }
+        .menu a:hover, .menu a.active { background: rgba(52,211,153,0.18); color: #ecfdf3; }
+        .btn-ghost { border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08); color: inherit; padding: 10px 12px; border-radius: 10px; text-decoration: none; text-align: center; font-weight: 700; }
+        .sidebar-actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+        .content { flex: 1; padding: 28px 32px 34px; display: flex; flex-direction: column; gap: 18px; }
+        .page-header { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+        .page-title h1 { margin: 0; font-size: 28px; font-weight: 800; }
+        .eyebrow { text-transform: uppercase; letter-spacing: 0.6px; font-size: 12px; color: var(--muted-color, #4b5563); margin: 0; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        .card-metric { background: var(--surface-color, #f9fbfd); border: 1px solid var(--border-color, #d9e1eb); border-radius: 14px; padding: 16px; box-shadow: var(--shadow-soft, 0 4px 10px rgba(0,0,0,0.06)); position: relative; overflow: hidden; }
+        .card-metric .value { font-size: 26px; font-weight: 800; margin: 6px 0; }
+        .panel { background: var(--surface-color, #f9fbfd); border: 1px solid var(--border-color, #d9e1eb); border-radius: 16px; padding: 16px; box-shadow: var(--shadow-soft, 0 4px 10px rgba(0,0,0,0.06)); }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+        .panel-title { margin: 0; font-size: 16px; font-weight: 700; }
+        .pill { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 12px; background: var(--surface-soft, #f1f4f8); font-weight: 600; gap: 6px; }
+        .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #0f172a; background: #bbf7d0; padding: 6px 10px; border-radius: 20px; font-weight: 700; }
         .alert-upcoming ul { margin: 8px 0 0 0; padding-left: 18px; }
     </style>
 </head>
 <body class="<?php echo themeClass($theme); ?>">
     <div class="layout">
-        <aside class="sidebar" id="sidebar">
-            <div class="brand">
-                <span class="dot"></span>
-                <span class="brand-text">ProHelp</span>
-            </div>
-            <div class="user-box">
-                <div class="label">Usuário</div>
-                <div class="value"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
-                <div class="label" style="margin-top:6px;">Perfil</div>
-                <div class="value"><?php echo $isAdmin ? 'Administrador' : 'Padrão'; ?></div>
-            </div>
-            <form method="post" class="d-flex flex-column gap-2">
-                <input type="hidden" name="toggle_theme" value="1">
-                <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'principal.php'); ?>">
-                <button type="submit" class="theme-btn">
-                    <span class="menu-icon">🌗</span>
-                    <span class="menu-label">Tema: <?php echo themeLabel($theme); ?></span>
-                </button>
-            </form>
-            <div class="nav-links">
-                <div class="nav-section">
-                    <div class="nav-title">Visão</div>
-                    <button type="button" class="nav-parent" data-target="group-dash">
-                        <span><span class="menu-icon">📊</span><span class="menu-label">Dashboards</span></span>
-                        <span class="chevron">▶</span>
-                    </button>
-                    <div class="nav-children" id="group-dash">
-                        <a href="dashboard.php"><span class="menu-icon">📈</span><span class="menu-label">Dashboard anual</span></a>
-                        <a href="dashboard_mensal.php"><span class="menu-icon">🗓️</span><span class="menu-label">Dashboard mensal</span></a>
-                    </div>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-title">Despesas</div>
-                    <button type="button" class="nav-parent" data-target="group-desp">
-                        <span><span class="menu-icon">💸</span><span class="menu-label">Lançamentos</span></span>
-                        <span class="chevron">▶</span>
-                    </button>
-                    <div class="nav-children" id="group-desp">
-                        <a href="despesas.php"><span class="menu-icon">📃</span><span class="menu-label">Lista de despesas</span></a>
-                        <a href="despesa_form.php"><span class="menu-icon">➕</span><span class="menu-label">Nova despesa</span></a>
-                    </div>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-title">Cadastros</div>
-                    <button type="button" class="nav-parent" data-target="group-cad">
-                        <span><span class="menu-icon">⚙️</span><span class="menu-label">Configurações</span></span>
-                        <span class="chevron">▶</span>
-                    </button>
-                    <div class="nav-children" id="group-cad">
-                        <a href="categoria_form.php"><span class="menu-icon">🏷️</span><span class="menu-label">Categorias</span></a>
-                        <a href="orcamento_form.php"><span class="menu-icon">💰</span><span class="menu-label">Orçamentos</span></a>
-                        <a href="regra_categoria_form.php"><span class="menu-icon">🧭</span><span class="menu-label">Regras de categoria</span></a>
-                        <?php if ($isAdmin): ?>
-                            <a href="aprovar_usuarios.php"><span class="menu-icon">✅</span><span class="menu-label">Aprovar cadastros</span></a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            <div class="sidebar-actions">
-                <a href="#" onclick="return false;"><span class="menu-icon">❓</span><span class="menu-label">Ajuda</span></a>
-                <a href="logout.php" class="logout-link"><span class="menu-icon">🚪</span><span class="menu-label">Sair</span></a>
-            </div>
-        </aside>
+        <?php renderSidebar('principal'); ?>
         <main class="content">
-            <div class="topbar">
-                <button class="toggle-btn" id="toggleSidebar">Alternar menu</button>
+            <div class="page-header">
+                <div class="page-title">
+                    <p class="eyebrow">Visão geral</p>
+                    <h1>Bem-vindo, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
+                    <span class="text-muted">Perfil: <?php echo $isAdmin ? 'Administrador' : 'Padrão'; ?></span>
+                </div>
+                <form method="post" class="d-flex flex-column gap-2 no-print">
+                    <input type="hidden" name="toggle_theme" value="1">
+                    <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'principal.php'); ?>">
+                    <button type="submit" class="button button-outline">Tema: <?php echo themeLabel($theme); ?></button>
+                </form>
             </div>
-            <div class="card">
-                <h1>Bem-vindo, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
-                <p>Esta é a página principal do sistema de despesas.</p>
+
+            <div class="cards-grid">
+                <div class="card-metric success">
+                    <h4>Dashboards</h4>
+                    <div class="value">Visão anual</div>
+                    <span class="badge"><a class="text-decoration-none text-reset" href="dashboard.php">Abrir dashboard</a></span>
+                </div>
+                <div class="card-metric info">
+                    <h4>Despesas</h4>
+                    <div class="value">Consultar</div>
+                    <span class="badge info"><a class="text-decoration-none text-reset" href="despesas.php">Ver lista</a></span>
+                </div>
+                <div class="card-metric warning">
+                    <h4>Nova despesa</h4>
+                    <div class="value">Lançar</div>
+                    <span class="badge warning"><a class="text-decoration-none text-reset" href="despesa_form.php">Cadastrar</a></span>
+                </div>
             </div>
+
             <?php if ($avisoProximo): ?>
-                <div class="alert-upcoming">
-                    <div class="fw-semibold mb-1">Contas próximas ao vencimento (7 dias):</div>
-                    <ul class="mb-0">
-                        <?php
-                            $hojeBase = (new DateTime('today'))->setTime(0, 0, 0);
-                        ?>
-                        <?php foreach ($avisoProximo as $d): ?>
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Contas próximas ao vencimento (7 dias)</h3>
+                        <span class="pill">Atenção</span>
+                    </div>
+                    <div class="alert-upcoming">
+                        <ul class="mb-0">
                             <?php
-                                $vencDt = (new DateTime($d['data_vencimento']))->setTime(0, 0, 0);
-                                $dias = (int)$hojeBase->diff($vencDt)->format('%r%a');
-                                if ($dias === 0) {
-                                    $textoDias = 'Hoje';
-                                } elseif ($dias > 0) {
-                                    $textoDias = $dias . ' ' . ($dias === 1 ? 'Dia do Vencimento' : 'Dias do Vencimento');
-                                } else {
-                                    $diasAtraso = abs($dias);
-                                    $textoDias = $diasAtraso . ' ' . ($diasAtraso === 1 ? 'Dia em atraso' : 'Dias em atraso');
-                                }
+                                $hojeBase = (new DateTime('today'))->setTime(0, 0, 0);
                             ?>
-                            <li>
-                                <?= htmlspecialchars($d['data_vencimento']) ?> - <?= htmlspecialchars($d['descricao']) ?> |
-                                R$ <?= number_format((float)$d['valor'], 2, ',', '.') ?> (<?= htmlspecialchars($d['status']) ?>)
-                                <?= htmlspecialchars($textoDias) ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                            <?php foreach ($avisoProximo as $d): ?>
+                                <?php
+                                    $vencDt = (new DateTime($d['data_vencimento']))->setTime(0, 0, 0);
+                                    $dias = (int)$hojeBase->diff($vencDt)->format('%r%a');
+                                    if ($dias === 0) {
+                                        $textoDias = 'Hoje';
+                                    } elseif ($dias > 0) {
+                                        $textoDias = $dias . ' ' . ($dias === 1 ? 'Dia do Vencimento' : 'Dias do Vencimento');
+                                    } else {
+                                        $diasAtraso = abs($dias);
+                                        $textoDias = $diasAtraso . ' ' . ($diasAtraso === 1 ? 'Dia em atraso' : 'Dias em atraso');
+                                    }
+                                ?>
+                                <li>
+                                    <?= htmlspecialchars($d['data_vencimento']) ?> - <?= htmlspecialchars($d['descricao']) ?> |
+                                    R$ <?= number_format((float)$d['valor'], 2, ',', '.') ?> (<?= htmlspecialchars($d['status']) ?>)
+                                    <?= htmlspecialchars($textoDias) ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
                 </div>
             <?php endif; ?>
         </main>
     </div>
-    <script>
-        const toggleBtn = document.getElementById('toggleSidebar');
-        const sidebar = document.getElementById('sidebar');
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-        });
-
-        document.querySelectorAll('.nav-parent').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = document.getElementById(btn.dataset.target);
-                const isOpen = btn.classList.toggle('open');
-                if (target) {
-                    target.classList.toggle('show', isOpen);
-                }
-            });
-        });
-    </script>
 </body>
 </html>

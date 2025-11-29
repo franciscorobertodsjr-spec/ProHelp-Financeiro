@@ -46,29 +46,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Cadastro de Usuário</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
     <style>
         body {
-            background: var(--page-bg);
+            background: radial-gradient(120% 140% at 0% 0%, rgba(16,185,129,0.12), transparent 35%),
+                        radial-gradient(100% 120% at 100% 0%, rgba(14,165,233,0.12), transparent 30%),
+                        var(--page-bg);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 32px 12px;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
             color: var(--text-color);
         }
         .cadastro-box {
-            max-width: 420px;
+            max-width: 460px;
             width: 100%;
             margin: 0 auto;
             background: var(--surface-color);
-            border-radius: 14px;
+            border-radius: 16px;
             box-shadow: var(--shadow-strong);
             padding: 32px;
+            border: 1px solid var(--border-color);
         }
-        .form-label { font-weight: 600; color: var(--text-color); }
+        .form-label { font-weight: 700; color: var(--text-color); }
+        .form-control {
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #0ea271, #34d399);
+            border: none;
+            border-radius: 12px;
+            padding: 11px 16px;
+            font-weight: 800;
+            box-shadow: 0 14px 28px rgba(16,185,129,0.35);
+        }
+        .btn-primary:hover { filter: brightness(1.04); box-shadow: 0 18px 32px rgba(16,185,129,0.45); }
+        .btn-outline-secondary { border-radius: 10px; }
         @media (max-width: 576px) {
             body { padding: 16px 8px; }
             .cadastro-box { padding: 24px; margin: 16px auto; }
@@ -77,7 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="<?php echo themeClass($theme); ?>">
     <div class="cadastro-box">
-        <h2 class="mb-4 text-center fw-bold">Cadastro de Usuário</h2>
+        <h2 class="mb-2 text-center fw-bold">Cadastro de Usuário</h2>
+        <p class="text-muted text-center mb-4">Crie sua conta para acessar as dashboards</p>
         <?php if ($success): ?>
             <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
         <?php endif; ?>
@@ -103,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <button class="btn btn-outline-secondary" type="button" id="toggleConfirm">Mostrar</button>
                 </div>
             </div>
-            <button type="submit" class="btn btn-success w-100">Cadastrar</button>
+            <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
         </form>
         <div class="mt-3 text-center">
             <a href="index.php" class="btn btn-outline-secondary w-100">Voltar ao Login</a>

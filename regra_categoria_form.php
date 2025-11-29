@@ -39,55 +39,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Nova Regra de Categoria</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
     <style>
+        /* Fallback rápido caso theme.css não carregue no servidor */
         body {
-            background: var(--page-bg);
-            min-height: 100vh;
-            padding: 32px 12px;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            color: var(--text-color);
+            margin: 0;
+            background: var(--page-bg, #eef3f7);
+            color: var(--text-color, #1f2937);
+            font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        .box {
-            max-width: 600px;
-            margin: 0 auto;
-            background: var(--surface-color);
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #0f172a 0%, #0b1f1a 100%);
+            color: #e8f7f1;
+            padding: 26px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 12px 0 40px rgba(0, 0, 0, 0.18);
+        }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: 0.4px; }
+        .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.15); }
+        .profile {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 14px;
-            box-shadow: var(--shadow-strong);
-            padding: 24px;
+            padding: 14px 12px;
+            text-align: center;
         }
-        .form-label { font-weight: 600; color: var(--text-color); }
-        @media (max-width: 576px) {
-            body { padding: 16px 8px; }
-            .box { padding: 18px; }
-            .btn { width: 100%; }
+        .avatar {
+            width: 78px; height: 78px; margin: 0 auto 10px auto; border-radius: 18px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.08));
+            display: grid; place-items: center; font-weight: 800; font-size: 26px; color: #f9fafb;
+        }
+        .menu { display: flex; flex-direction: column; gap: 8px; }
+        .menu a { color: #ecfdf3; text-decoration: none; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); font-weight: 600; }
+        .menu a:hover, .menu a.active { background: rgba(52,211,153,0.18); color: #ecfdf3; }
+        .btn-ghost { border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08); color: inherit; padding: 10px 12px; border-radius: 10px; text-decoration: none; text-align: center; font-weight: 700; }
+        .sidebar-actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+        .content { flex: 1; padding: 28px 32px 34px; display: flex; flex-direction: column; gap: 18px; }
+        .page-header { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+        .page-title h1 { margin: 0; font-size: 28px; font-weight: 800; }
+        .eyebrow { text-transform: uppercase; letter-spacing: 0.6px; font-size: 12px; color: var(--muted-color, #4b5563); margin: 0; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px 16px;
+        }
+        .form-grid .button { width: 100%; text-align: center; padding: 12px 16px; border-radius: 12px; font-weight: 800; }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .panel { background: var(--surface-color, #f9fbfd); border: 1px solid var(--border-color, #d9e1eb); border-radius: 16px; padding: 16px; box-shadow: var(--shadow-soft, 0 4px 10px rgba(0,0,0,0.06)); }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+        .panel-title { margin: 0; font-size: 16px; font-weight: 700; }
+        .pill { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 12px; background: var(--surface-soft, #f1f4f8); font-weight: 600; gap: 6px; }
+        @media (max-width: 600px) {
+            .actions .button { width: 100%; text-align: center; }
         }
     </style>
 </head>
 <body class="<?php echo themeClass($theme); ?>">
-    <div class="box">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <h3 class="fw-bold mb-0">Cadastrar Regra de Categoria</h3>
-            <a href="principal.php" class="btn btn-outline-secondary btn-sm">Voltar</a>
-        </div>
-        <?php if ($success): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
-        <?php endif; ?>
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-        <?php endif; ?>
-        <form method="post" autocomplete="off">
-            <div class="mb-3">
-                <label class="form-label" for="palavra">Palavra</label>
-                <input type="text" class="form-control" id="palavra" name="palavra" required>
+    <div class="layout">
+        <?php renderSidebar('regras'); ?>
+        <main class="content">
+            <div class="page-header">
+                <div class="page-title">
+                    <p class="eyebrow">Automação</p>
+                    <h1>Regras de categoria</h1>
+                    <span class="text-muted">Associe palavras-chave a categorias automaticamente</span>
+                </div>
+                <div class="actions no-print">
+                    <a href="principal.php" class="button button-link text-decoration-none">Dashboard</a>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="categoria">Categoria</label>
-                <input type="text" class="form-control" id="categoria" name="categoria" required>
+            <?php if ($success): ?>
+                <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+            <?php endif; ?>
+            <?php if ($error): ?>
+                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">Nova regra</h3>
+                    <span class="pill">Obrigatório</span>
+                </div>
+                <form method="post" autocomplete="off" class="form-grid">
+                    <div>
+                        <label class="form-label" for="palavra">Palavra</label>
+                        <input type="text" class="form-control" id="palavra" name="palavra" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="categoria">Categoria</label>
+                        <input type="text" class="form-control" id="categoria" name="categoria" required>
+                    </div>
+                    <div class="actions" style="grid-column:1/-1;">
+                        <button type="submit" class="button button-primary">Salvar regra</button>
+                        <a href="principal.php" class="button button-outline text-decoration-none">Voltar</a>
+                    </div>
+                </form>
             </div>
-            <button type="submit" class="btn btn-primary">Salvar regra</button>
-        </form>
+        </main>
     </div>
     <div class="popup-container" id="popupContainer"></div>
     <script>
