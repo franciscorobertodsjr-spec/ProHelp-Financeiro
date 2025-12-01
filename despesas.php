@@ -23,6 +23,22 @@ $data_fim = $_GET['data_fim'] ?? $ultimoMes;
 $recorrente = $_GET['recorrente'] ?? '';
 $parcelado = $_GET['parcelado'] ?? '';
 
+$meses = [
+    1 => 'janeiro', 2 => 'fevereiro', 3 => 'março', 4 => 'abril',
+    5 => 'maio', 6 => 'junho', 7 => 'julho', 8 => 'agosto',
+    9 => 'setembro', 10 => 'outubro', 11 => 'novembro', 12 => 'dezembro'
+];
+
+$countDataIni = $data_ini ?: $primeiroMes;
+$countDataFim = $data_fim ?: $ultimoMes;
+
+$mesReferencia = DateTime::createFromFormat('Y-m-d', $countDataIni) ?: $hoje;
+$mesAtualNome = $meses[(int)$mesReferencia->format('n')] ?? '';
+
+$countStmt = $pdo->prepare('SELECT COUNT(*) FROM despesas WHERE data_vencimento BETWEEN ? AND ?');
+$countStmt->execute([$countDataIni, $countDataFim]);
+$qtdDespesasMes = (int)$countStmt->fetchColumn();
+
 $successMsg = '';
 $errorMsg = '';
 
@@ -258,6 +274,11 @@ foreach ($despesas as $d) {
                     <p class="eyebrow">Listagem</p>
                     <h1>Despesas</h1>
                     <span class="text-muted">Consulta agrupada por categoria • Atualizado em <?= htmlspecialchars($dataHora) ?></span>
+                    <div class="d-flex flex-wrap gap-2 mt-1">
+                        <span class="pill">
+                            <?= htmlspecialchars(ucfirst($mesAtualNome)) ?>: <?= $qtdDespesasMes ?> <?= $qtdDespesasMes === 1 ? 'despesa' : 'despesas' ?>!
+                        </span>
+                    </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 no-print flex-wrap">
                     <a href="despesa_form.php" class="button button-primary text-decoration-none">Nova despesa</a>

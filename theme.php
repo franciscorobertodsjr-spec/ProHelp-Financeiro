@@ -66,6 +66,8 @@ function renderSidebar(string $active = ''): void
     $items = [
         'principal' => ['href' => 'dashboard.php', 'label' => 'Dashboard anual'],
         'dashboard_mensal' => ['href' => 'dashboard_mensal.php', 'label' => 'Dashboard mensal'],
+        'cartoes' => ['href' => 'cartoes.php', 'label' => 'Cartões'],
+        'faturas' => ['href' => 'faturas_cartao.php', 'label' => 'Faturas cartão'],
         'despesas' => ['href' => 'despesas.php', 'label' => 'Despesas'],
         'despesa_form' => ['href' => 'despesa_form.php', 'label' => 'Nova despesa'],
         'orcamento' => ['href' => 'orcamento_form.php', 'label' => 'Orçamentos'],
